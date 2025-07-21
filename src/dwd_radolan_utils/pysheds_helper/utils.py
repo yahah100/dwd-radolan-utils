@@ -6,15 +6,12 @@ from rasterio.merge import merge
 from tqdm import tqdm
 from pyproj import Transformer
 
-import matplotlib.pyplot as plt
-from pysheds.grid import Grid
+from pysheds.sgrid import sGrid
 from pysheds.sview import Raster as sRaster
-from pysheds.pview import Raster as pRaster
-from pysheds.view import ViewFinder
+from pysheds.sview import ViewFinder
 
-Raster = pRaster | sRaster
 
-def zoom_dem(dem: Raster, grid: Grid, downsample_factor: int = 4) -> tuple[Raster, Grid]:
+def zoom_dem(dem: sRaster, grid: sGrid, downsample_factor: int = 4) -> tuple[sRaster, sGrid]:
     """Downsample a DEM raster and corresponding grid by a specified factor.
     
     Reduces the resolution of the DEM data while preserving spatial relationships
@@ -29,7 +26,7 @@ def zoom_dem(dem: Raster, grid: Grid, downsample_factor: int = 4) -> tuple[Raste
     Returns:
         tuple: (downsampled_raster, new_grid) where:
             - downsampled_raster: Raster object with reduced resolution
-            - new_grid: Grid object with updated spatial parameters
+            - new_grid: sGrid object with updated spatial parameters
     """
     if downsample_factor == 1:
         return dem, grid
@@ -67,15 +64,15 @@ def zoom_dem(dem: Raster, grid: Grid, downsample_factor: int = 4) -> tuple[Raste
             mask=new_mask
         )
 
-        new_grid = Grid(new_viewfinder)
-        dem_zoom = pRaster(dem_zoom, viewfinder=new_viewfinder)
+        new_grid = sGrid(new_viewfinder)
+        dem_zoom = sRaster(dem_zoom, viewfinder=new_viewfinder)
     
         return dem_zoom, new_grid
 
     else:
         raise ValueError(f"Downsample factor must be greater than 0, got {downsample_factor}")
 
-def load_dem(data_dir: Path) -> tuple[Raster, Grid]:
+def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
     """Load and merge multiple DEM TIFF files into a single mosaic.
     
     Searches for all .tif files in the specified directory and creates a combined
@@ -129,11 +126,11 @@ def load_dem(data_dir: Path) -> tuple[Raster, Grid]:
         # Close all source files to free memory
         for src in src_files_to_mosaic:
             src.close()
-    grid = Grid.from_raster(path, data_name='elevation')
-    dem: Raster = grid.read_raster(path, data_name='elevation')
+    grid = sGrid.from_raster(path, data_name='elevation')
+    dem: sRaster = grid.read_raster(path, data_name='elevation')
     return dem, grid
 
-def convert_to_utm(grid: Grid, coords_wgs84: tuple[float, float]) -> tuple[float, float]:
+def convert_to_utm(grid: sGrid, coords_wgs84: tuple[float, float]) -> tuple[float, float]:
     """Convert WGS84 coordinates to the grid's coordinate reference system.
     
     Transforms longitude/latitude coordinates to the spatial reference system
