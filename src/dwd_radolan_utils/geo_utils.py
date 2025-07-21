@@ -69,7 +69,7 @@ def convert_radolan_to_wgs84(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, 
 
 def get_wgs84_grid() -> np.ndarray:
     """
-    Returns a grid of WGS84 coordinates.
+    Returns a grid of WGS84 coordinates. Each cell is a tuple of (latitude, longitude) of the radolan grid in WGS84.
 
     Returns:
         wgs84_grid (numpy.ndarray): A grid of WGS84 coordinates with shape (900, 900, 2).
