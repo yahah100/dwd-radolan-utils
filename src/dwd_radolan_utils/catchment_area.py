@@ -74,7 +74,7 @@ def compute_catchment_area(
     grid: sGrid,
     dirmap: tuple[int, ...],
     coordinates: tuple[float, float],
-) -> tuple[sRaster, sRaster, tuple[int, int]]:
+) -> tuple[sRaster, sRaster, tuple[float, float]]:
     """Compute the catchment area and distance to outlet for a given pour point.
     
     Args:
@@ -97,7 +97,10 @@ def compute_catchment_area(
     acc_threshold = 1_000
 
     # Snap pour point to high accumulation cell
-    x_snap, y_snap = grid.snap_to_mask(acc > acc_threshold, target_coords)
+    x_snap_raw, y_snap_raw = grid.snap_to_mask(acc > acc_threshold, target_coords)
+    # Convert to scalar values to fix type issues
+    x_snap = float(x_snap_raw) if hasattr(x_snap_raw, 'item') else float(x_snap_raw)
+    y_snap = float(y_snap_raw) if hasattr(y_snap_raw, 'item') else float(y_snap_raw)
     print(f"\nSnapped coordinates: x={x_snap}, y={y_snap}")
 
     # Delineate the catchment
