@@ -1,6 +1,8 @@
+import logging
+from pathlib import Path
+import json
 import numpy as np
 from scipy.ndimage import zoom
-from pathlib import Path
 import rasterio
 from rasterio.merge import merge
 from tqdm import tqdm
@@ -9,6 +11,7 @@ from pyproj import Transformer
 from pysheds.sgrid import sGrid
 from pysheds.sview import Raster as sRaster
 from pysheds.sview import ViewFinder
+from pysheds.serializer import save_sgrid, load_sgrid, save_raster, load_raster
 
 
 def zoom_dem(dem: sRaster, grid: sGrid, downsample_factor: int = 4) -> tuple[sRaster, sGrid]:
@@ -87,9 +90,11 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
             - dem_raster: Combined DEM raster data
             - grid: Pysheds grid object for the mosaic
     """
-    tif_files = list(data_dir.glob('*.tif'))
+    
     path = data_dir / "combined_dgm_mosaic.tif"
+    temp_path = data_dir / "cache" / "combined_dgm"
     if not path.exists():
+        tif_files = list(data_dir.glob('*.tif'))
         src_files_to_mosaic = []
 
         for i, tif_file in tqdm(enumerate(tif_files)):
@@ -126,8 +131,20 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
         # Close all source files to free memory
         for src in src_files_to_mosaic:
             src.close()
+
+    logging.info(f"Loading DEM from: {path}")
     grid = sGrid.from_raster(path, data_name='elevation')
     dem: sRaster = grid.read_raster(path, data_name='elevation')
+
+    if not temp_path.exists():
+        logging.info(f"Saving grid to: {temp_path}")
+        save_sgrid(grid, temp_path)
+        save_raster(dem, temp_path)
+    else:
+        logging.info(f"Loading grid from: {temp_path}")
+        grid = load_sgrid(temp_path)
+        dem = load_raster(temp_path)
+
     return dem, grid
 
 def convert_to_utm(grid: sGrid, coords_wgs84: tuple[float, float]) -> tuple[float, float]:
