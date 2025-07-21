@@ -3,10 +3,11 @@ import logging
 import numpy as np
 from pysheds.sgrid import sGrid
 from pysheds.sview import Raster as sRaster
+from pyproj import CRS, Transformer
 
 from dwd_radolan_utils.pysheds_helper.utils import zoom_dem, convert_to_utm
 from dwd_radolan_utils.pysheds_helper.plot_helper import plot_distance_catchment_area
-
+from dwd_radolan_utils.geo_utils import get_wgs84_grid
 
 def load_inflated_dem(
     data_dir=Path("data/dgm"), downsample_factor: int = 10
@@ -181,15 +182,74 @@ def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsamp
     return dist, grid
 
 
-def convert_grid_to_radolan_grid(dist: sRaster, grid: sGrid):
-    pass
+def convert_grid_to_radolan_grid(dist: sRaster, grid: sGrid) -> np.ndarray:
+    """
+    Project each cell of the distance raster to the radolan grid. Values where no distance is available are set to np.nan.
+
+    Args:
+        dist (sRaster): Distance raster showing flow distances
+        grid (sGrid): The Grid object containing the flow data
     
+    Returns:
+        np.ndarray: A grid of distance values in the radolan grid
+    """
+    # get the target grid with wgs84 coordinates
+    wgs_84_grid = get_wgs84_grid()
+    
+    new_grid = np.full((900, 900), np.nan)
+    dist_crs = grid.crs
+    
+    wgs84_crs = CRS.from_epsg(4326)
+    transformer = Transformer.from_crs(wgs84_crs, dist_crs, always_xy=True)
+    
+    lons = wgs_84_grid[:, :, 1].flatten()
+    lats = wgs_84_grid[:, :, 0].flatten()
+    
+    x_transformed, y_transformed = transformer.transform(lons, lats)
+    
+    x_transformed = x_transformed.reshape((900, 900))
+    y_transformed = y_transformed.reshape((900, 900))
+    
+    # Get the bounds of the distance raster to check if coordinates are within bounds
+    try:
+        bounds = grid.extent  # (x_min, x_max, y_min, y_max)
+        x_min, x_max, y_min, y_max = bounds
+    except:
+        x_min, x_max = float('-inf'), float('inf')
+        y_min, y_max = float('-inf'), float('inf')
+    
+    # For each cell in the radolan grid, sample the distance raster
+    for i in range(900):
+        for j in range(900):
+            x_coord = x_transformed[i, j]
+            y_coord = y_transformed[i, j]
+            
+            # Check if the transformed coordinates are within the dist raster bounds
+            if (x_min <= x_coord <= x_max and y_min <= y_coord <= y_max):
+                try:
+                    col, row = grid.nearest_cell(x_coord, y_coord)
+                    
+                    if (0 <= row < dist.shape[0] and 0 <= col < dist.shape[1]):
+                        value = dist[row, col]
+                        
+                        if (not np.isnan(value) and 
+                            hasattr(dist, 'nodata') and value != dist.nodata):
+                            new_grid[i, j] = value
+                        elif not hasattr(dist, 'nodata') and not np.isnan(value):
+                            new_grid[i, j] = value
+                            
+                except Exception:
+                    logging.warning(f"Warning: Could not project cell {i}, {j} to radolan grid {x_coord}, {y_coord}. Will be set to np.nan.")
+                    continue
+    
+    return new_grid
 
 
 def main():
     kluse_dis_wgs84 = (7.158556, 51.255604) 
     # compute_catchement_for_location(kluse_dis_wgs84, downsample_factor=50)
-    compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50)
+    dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50)
+    new_grid = convert_grid_to_radolan_grid(dist, grid)
 
 if __name__ == "__main__":
     logging.basicConfig(
