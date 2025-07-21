@@ -42,7 +42,7 @@ def zoom_dem(dem: sRaster, grid: sGrid, downsample_factor: int = 4) -> tuple[sRa
         dem_data[dem_data == original_nodata] = np.nan if original_dtype in [np.float32, np.float64] else 0
         
         # Apply zoom
-        dem_zoom = zoom(dem_data, zoom_factor, order=1)
+        dem_zoom: np.ndarray = zoom(dem_data, zoom_factor, order=1) # type: ignore
         dem_zoom[np.isnan(dem_zoom)] = original_nodata
         dem_zoom = dem_zoom.astype(original_dtype)
 
