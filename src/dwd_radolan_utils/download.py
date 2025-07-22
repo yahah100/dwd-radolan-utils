@@ -153,6 +153,36 @@ def get_suffix(file_name: Path):
         suffix = ".tar.gz"
     return suffix
 
+def extract_tar_file(new_file: Path, new_unpacked_file: Path, suffix: str):
+    log.debug(f"Unpacking tar file {new_file} to {new_unpacked_file}")
+    # Try different tar extraction methods
+    extraction_successful = False
+    
+    # First try as gzipped tar
+    if suffix == ".tar.gz":
+        try:
+            with tarfile.open(new_file, "r:gz") as tar:
+                tar.extractall(path=new_unpacked_file)
+            extraction_successful = True
+            log.debug("Successfully extracted as gzipped tar")
+        except (tarfile.ReadError, OSError) as e:
+            log.warning(f"Failed to extract as gzipped tar: {e}")
+            # File might not be gzipped despite the extension
+    
+    # If gzipped extraction failed, try as plain tar
+    if not extraction_successful:
+        try:
+            with tarfile.open(new_file, "r:") as tar:
+                tar.extractall(path=new_unpacked_file)
+            extraction_successful = True
+            log.debug("Successfully extracted as plain tar")
+        except (tarfile.ReadError, OSError) as e:
+            log.error(f"Failed to extract as plain tar: {e}")
+            raise Exception(f"Could not extract tar file {new_file}. Tried both gzipped and plain tar formats.") from e
+    
+    new_file.unlink()
+    log.debug(f"Unpacked file {new_unpacked_file} saved")
+    return new_unpacked_file
 
 def dowload_file_and_save(
     url: str,
@@ -176,8 +206,8 @@ def dowload_file_and_save(
     """
     log.info(f"Download file {file_name} from {url} historical_data={historical_data}")
     suffix = get_suffix(file_name=file_name)
-    if suffix not in [".tar.gz", ".gz", ".bz2"]:
-        raise Exception(f"File {file_name} is not in a supported format (gz, bz2)")
+    if suffix not in [".tar.gz", ".gz", ".bz2", ".tar"]:
+        raise Exception(f"File {file_name} is not in a supported format (gz, bz2, tar, tar.gz)")
 
     save_path.mkdir(parents=True, exist_ok=True)
     new_file_name = convert_dwd_filename(file_name, historical_data=historical_data, is_recent=is_recent)
@@ -199,13 +229,20 @@ def dowload_file_and_save(
     with open(new_file, "wb") as f:
         f.write(response.content)
 
-    if suffix == ".tar.gz":
-        log.debug(f"Unpacking tar.gz file {new_file} to {new_unpacked_file}")
-        with tarfile.open(new_file, "r:gz") as tar:
-            tar.extractall(path=new_unpacked_file)
-        new_file.unlink()
-        log.debug(f"Unpacked file {new_unpacked_file} saved")
-        return new_unpacked_file
+    if suffix == ".tar.gz" or suffix == ".tar":
+        new_unpacked_file = extract_tar_file(new_file, new_unpacked_file, suffix)
+        list_files_bin = list(new_unpacked_file.glob("*bin"))
+        list_files_tar = list(new_unpacked_file.glob("*.tar.gz"))
+        if len(list_files_tar) == 0 and len(list_files_bin) >= 1:
+            return new_unpacked_file
+        elif len(list_files_tar) >= 1 and len(list_files_bin) == 0:
+            log.warning(f"Multiple tar files found in {new_unpacked_file}, need further extraction")
+            for tar_file in list_files_tar:
+                log.debug(f"Extracting tar file {tar_file} to {new_unpacked_file}")
+                _ = extract_tar_file(tar_file, new_unpacked_file, suffix)
+            return new_unpacked_file
+        else:
+            raise Exception(f"Multiple tar files found in {new_unpacked_file}")
     elif suffix == ".gz":
         open_func = gzip.open
     elif suffix == ".bz2":
@@ -248,6 +285,7 @@ def download_radolan_data(
 
 def download_historical_radolan_data(radolan_url: str, file: str, save_path=Path(".tmp")):
     parth_dir = dowload_file_and_save(url=radolan_url, file_name=Path(file), save_path=save_path, historical_data=True)
+    log.debug(f"parth_dir: {parth_dir}")
     file_list = list(parth_dir.glob("*bin"))
     # sort the files by name
     file_list = sorted(file_list, key=lambda x: x.name)
@@ -355,7 +393,7 @@ def download_dwd(
 
     elif type_radolan == "historical" and start is not None and end is not None:
         log.info(f"Downloading historical data from {start} to {end} to {save_path}")
-        log.warning("Downloading historical data always downloads the whole month")
+        log.warning("Downloading historical data always downloads the whole month, and at least one month")
         year_month_list = get_month_year_list(start_date=start, end_date=end)
 
         for year, month in year_month_list:
@@ -401,6 +439,7 @@ def download_one_month(
     elif type_radolan == "historical":
         radolan_url = f"https://opendata.dwd.de/climate_environment/CDC/grids_germany/hourly/radolan/historical/bin/{year}/"
         list_files = list_dwd_files_for_var(radolan_url)
+        log.debug(f"list_files: {list_files}")
 
         list_files = [file for file in list_files if file.endswith(f"{year}{month:02}.tar.gz")]
         if len(list_files) == 0:
@@ -410,14 +449,15 @@ def download_one_month(
             log.warning(f"Multiple files found for year {year} and month {month}")
             return
         file = list_files[0]
+        log.debug(f"file: {file}")
         radolan_data, time_list = download_historical_radolan_data(radolan_url=radolan_url, file=file, save_path=Path(".tmp"))
         save_to_npz_files(radolan_data, time_list, save_path=save_path)
 
 
 def main():
-    type_radolan: TypeRadarData = "recent"
-    start_date = datetime(year=2025, month=5, day=1)
-    end_date = datetime(year=2025, month=5, day=3)
+    type_radolan: TypeRadarData = "historical"
+    start_date = datetime(year=2024, month=1, day=1)
+    end_date = datetime(year=2024, month=2, day=1)
 
     download_dwd(type_radolan=type_radolan, start=start_date, end=end_date)
 
