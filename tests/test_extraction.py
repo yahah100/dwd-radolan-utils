@@ -223,13 +223,16 @@ class TestExtractTimeSeriesFromRadar:
         mock_read.return_value = (sample_radar_data, sample_time_data)
         mock_cut.side_effect = lambda x, **kwargs: x
 
+        # Convert 2D grid to 3D (add batch dimension)
+        grid_3d = sample_boolean_grid[np.newaxis, :, :]  # Shape: (1, 100, 100)
+
         # Test the function
-        ts_array, timestamps = extract_time_series_from_radar(grid=sample_boolean_grid, path=temp_directory, save=False)
+        ts_array, timestamps = extract_time_series_from_radar(grid=grid_3d, path=temp_directory, save=False)
 
         assert isinstance(ts_array, np.ndarray)
         assert isinstance(timestamps, np.ndarray)
         assert ts_array.shape[0] == len(timestamps)
-        assert ts_array.shape[1] == sample_boolean_grid.shape[0]
+        assert ts_array.shape[1] == grid_3d.shape[0]  # Should be 1 (number of grids)
 
     @patch("dwd_radolan_utils.extraction.read_radar_data")
     @patch("dwd_radolan_utils.extraction.cut_out_shapes")
@@ -249,9 +252,11 @@ class TestExtractTimeSeriesFromRadar:
         mock_read.return_value = (sample_radar_data, sample_time_data)
         mock_cut.side_effect = lambda x, **kwargs: x
 
+        grid_3d = sample_boolean_grid[np.newaxis, :, :] 
+
         # Test the function
         ts_array, timestamps = extract_time_series_from_radar(
-            grid=sample_boolean_grid,
+            grid=grid_3d,
             path=temp_directory,
             save=True,
             save_path=temp_directory / "test_output.csv",

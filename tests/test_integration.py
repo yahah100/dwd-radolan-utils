@@ -162,15 +162,14 @@ class TestIntegrationFullWorkflow:
                     "max_y": 80,
                 }
 
-                # Extract the grid for extraction (first catchment)
-                extraction_grid = converted_grid[0]
+                extraction_grid = converted_grid[0:1]
 
                 ts_array, timestamps = extract_time_series_from_radar(grid=extraction_grid, path=temp_directory, save=False)
 
                 # Verify the complete workflow
                 assert isinstance(ts_array, np.ndarray)
                 assert len(timestamps) == 24
-                assert ts_array.shape == (24, 900)  # Time x RADOLAN grid dimension
+                assert ts_array.shape == (24, 1)  # Time x number of grids (1 catchment)
 
                 # Verify all modules were called
                 mock_load_dem.assert_called_once()
