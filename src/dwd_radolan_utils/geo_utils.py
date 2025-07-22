@@ -28,7 +28,6 @@ AUTHORITY["EPSG","1000001"]
 """
 
 
-
 def turn_df_to_xarray(pd_dataframe: pd.DataFrame) -> xr.Dataset:
     """
     Convert Pandas DataFrame back to xarray.Dataset, adding attributes.
@@ -40,15 +39,31 @@ def turn_df_to_xarray(pd_dataframe: pd.DataFrame) -> xr.Dataset:
         xarray.Dataset: An xarray.Dataset containing rain data with added attributes.
     """
 
-    my_xarray = xr.Dataset.from_dataframe(pd_dataframe.set_index(['y', 'x', 'time']))
-    my_xarray['y'].attrs = {'standard_name': 'projection_y_coordinate', 'long_name': 'y coordinate of projection', 'units': 'km'}
-    my_xarray['x'].attrs = {'standard_name': 'projection_x_coordinate', 'long_name': 'x coordinate of projection', 'units': 'km'}
-    my_xarray['time'].attrs = {'standard_name': 'time'}
-    my_xarray['RW'].attrs = {'valid_min': 0, 'valid_max': 100, 'standard_name': 'rainfall_rate', 'long_name': 'RW', 'unit': 'mm h-1'}
+    my_xarray = xr.Dataset.from_dataframe(pd_dataframe.set_index(["y", "x", "time"]))
+    my_xarray["y"].attrs = {
+        "standard_name": "projection_y_coordinate",
+        "long_name": "y coordinate of projection",
+        "units": "km",
+    }
+    my_xarray["x"].attrs = {
+        "standard_name": "projection_x_coordinate",
+        "long_name": "x coordinate of projection",
+        "units": "km",
+    }
+    my_xarray["time"].attrs = {"standard_name": "time"}
+    my_xarray["RW"].attrs = {
+        "valid_min": 0,
+        "valid_max": 100,
+        "standard_name": "rainfall_rate",
+        "long_name": "RW",
+        "unit": "mm h-1",
+    }
     return my_xarray
 
 
-def convert_radolan_to_wgs84(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def convert_radolan_to_wgs84(
+    x: np.ndarray, y: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Converts coordinates from the Radolan coordinate reference system (CRS) to the WGS84 CRS.
 
@@ -67,6 +82,7 @@ def convert_radolan_to_wgs84(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, 
 
     return transformer.transform(x, y)
 
+
 def get_wgs84_grid() -> np.ndarray:
     """
     Returns a grid of WGS84 coordinates. Each cell is a tuple of (latitude, longitude) of the radolan grid in WGS84.
@@ -76,8 +92,8 @@ def get_wgs84_grid() -> np.ndarray:
                                     The first dimension represents latitude, the second dimension represents longitude,
                                     and the third dimension represents the coordinates.
     """
-    x_radolan_coords = np.arange(-522.9621669218559, 376.0378330781441+0.1, 1.0)
-    y_radolan_coords = np.arange(-4658.144724265571,  -3759.1447242655713+0.1, 1.0)
+    x_radolan_coords = np.arange(-522.9621669218559, 376.0378330781441 + 0.1, 1.0)
+    y_radolan_coords = np.arange(-4658.144724265571, -3759.1447242655713 + 0.1, 1.0)
 
     wgs84_coords = convert_radolan_to_wgs84(x_radolan_coords, y_radolan_coords)
     wgs84_coords = np.array(wgs84_coords).T
@@ -88,9 +104,11 @@ def get_wgs84_grid() -> np.ndarray:
 
     wgs84_grid = np.stack([lat, lon], axis=2)
     return wgs84_grid
-    
 
-def cut_out_shapes(x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int, max_dim_2: int) -> np.ndarray:
+
+def cut_out_shapes(
+    x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int, max_dim_2: int
+) -> np.ndarray:
     """
     Cuts out shapes from a given array based on the specified dimensions.
 
@@ -111,5 +129,3 @@ def cut_out_shapes(x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int
         return x[min_dim_1:max_dim_1, min_dim_2:max_dim_2]
     else:
         raise ValueError("Input array must have either 2 or 3 dimensions.")
-
-

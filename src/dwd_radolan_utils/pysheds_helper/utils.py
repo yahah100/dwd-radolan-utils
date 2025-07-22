@@ -14,18 +14,20 @@ from pysheds.sview import ViewFinder
 from pysheds.serializer import save_sgrid, load_sgrid, save_raster, load_raster
 
 
-def zoom_dem(dem: sRaster, grid: sGrid, downsample_factor: int = 4) -> tuple[sRaster, sGrid]:
+def zoom_dem(
+    dem: sRaster, grid: sGrid, downsample_factor: int = 4
+) -> tuple[sRaster, sGrid]:
     """Downsample a DEM raster and corresponding grid by a specified factor.
-    
+
     Reduces the resolution of the DEM data while preserving spatial relationships
     and metadata. Useful for faster processing and visualization of large datasets.
-    
+
     Args:
         dem: Digital elevation model raster data to be downsampled
         grid: Pysheds grid object containing spatial reference information
         downsample_factor: Factor by which to reduce resolution (default: 4)
             A factor of 4 means the output will have 1/4 the resolution in each dimension
-    
+
     Returns:
         tuple: (downsampled_raster, new_grid) where:
             - downsampled_raster: Raster object with reduced resolution
@@ -35,66 +37,71 @@ def zoom_dem(dem: sRaster, grid: sGrid, downsample_factor: int = 4) -> tuple[sRa
         return dem, grid
     elif downsample_factor > 1:
         zoom_factor = 1.0 / downsample_factor
-        
+
         # Keep the original dtype and nodata value
         original_dtype = dem.dtype
         original_nodata = dem.nodata
-        
+
         # Convert to float for processing, but we'll convert back
         dem_data = dem.copy()
-        dem_data[dem_data == original_nodata] = np.nan if original_dtype in [np.float32, np.float64] else 0
-        
+        dem_data[dem_data == original_nodata] = (
+            np.nan if original_dtype in [np.float32, np.float64] else 0
+        )
+
         # Apply zoom
-        dem_zoom: np.ndarray = zoom(dem_data, zoom_factor, order=1) # type: ignore
+        dem_zoom: np.ndarray = zoom(dem_data, zoom_factor, order=1)  # type: ignore
         dem_zoom[np.isnan(dem_zoom)] = original_nodata
         dem_zoom = dem_zoom.astype(original_dtype)
 
         # Calculate new affine transform
         old_affine = dem.affine
         new_affine = old_affine * old_affine.scale(downsample_factor, downsample_factor)
-        
+
         # Resample the mask
         new_mask = zoom(dem.mask.astype(float), zoom_factor, order=0) > 0.5
-        
+
         # Use the EXACT same nodata value and ensure it's the right numpy type
         nodata_value = original_dtype.type(original_nodata)
-        
+
         new_viewfinder = ViewFinder(
             affine=new_affine,
             shape=dem_zoom.shape,
             crs=dem.crs,
             nodata=nodata_value,
-            mask=new_mask
+            mask=new_mask,
         )
 
         new_grid = sGrid(new_viewfinder)
         dem_zoom = sRaster(dem_zoom, viewfinder=new_viewfinder)
-    
+
         return dem_zoom, new_grid
 
     else:
-        raise ValueError(f"Downsample factor must be greater than 0, got {downsample_factor}")
+        raise ValueError(
+            f"Downsample factor must be greater than 0, got {downsample_factor}"
+        )
+
 
 def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
     """Load and merge multiple DEM TIFF files into a single mosaic.
-    
+
     Searches for all .tif files in the specified directory and creates a combined
     mosaic. If a mosaic already exists, loads it directly. The mosaic is saved
     with LZW compression to reduce file size.
-    
+
     Args:
         data_dir: Path to directory containing DEM TIFF files
-    
+
     Returns:
         tuple: (dem_raster, grid) where:
             - dem_raster: Combined DEM raster data
             - grid: Pysheds grid object for the mosaic
     """
-    
+
     path = data_dir / "combined_dgm_mosaic.tif"
     temp_path = data_dir / "cache" / "combined_dgm"
     if not path.exists():
-        tif_files = list(data_dir.glob('*.tif'))
+        tif_files = list(data_dir.glob("*.tif"))
         src_files_to_mosaic = []
 
         for i, tif_file in tqdm(enumerate(tif_files)):
@@ -104,7 +111,6 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
             except Exception as e:
                 print(f"Error opening {tif_file}: {e}")
 
-
         mosaic, out_trans = merge(src_files_to_mosaic)
 
         print(f"Mosaic created with shape: {mosaic.shape}")
@@ -112,13 +118,15 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
 
         # Get metadata from the first file and update for the mosaic
         out_meta = src_files_to_mosaic[0].meta.copy()
-        out_meta.update({
-            "driver": "GTiff",
-            "height": mosaic.shape[1], 
-            "width": mosaic.shape[2],
-            "transform": out_trans,
-            "compress": "lzw"  # Add compression to reduce file size
-        })
+        out_meta.update(
+            {
+                "driver": "GTiff",
+                "height": mosaic.shape[1],
+                "width": mosaic.shape[2],
+                "transform": out_trans,
+                "compress": "lzw",  # Add compression to reduce file size
+            }
+        )
 
         print(f"Mosaic metadata: {out_meta}")
 
@@ -134,8 +142,8 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
 
     if not temp_path.exists():
         logging.info(f"Loading DEM from: {path}")
-        grid = sGrid.from_raster(path, data_name='elevation')
-        dem: sRaster = grid.read_raster(path, data_name='elevation')
+        grid = sGrid.from_raster(path, data_name="elevation")
+        dem: sRaster = grid.read_raster(path, data_name="elevation")
         logging.info(f"Saving grid to: {temp_path}")
         save_sgrid(grid, temp_path)
         save_raster(dem, temp_path)
@@ -146,17 +154,20 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
 
     return dem, grid
 
-def convert_to_utm(grid: sGrid, coords_wgs84: tuple[float, float]) -> tuple[float, float]:
+
+def convert_to_utm(
+    grid: sGrid, coords_wgs84: tuple[float, float]
+) -> tuple[float, float]:
     """Convert WGS84 coordinates to the grid's coordinate reference system.
-    
+
     Transforms longitude/latitude coordinates to the spatial reference system
     used by the grid (typically UTM). Includes validation to ensure the converted
     coordinates fall within the grid extent.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         coords_wgs84: Tuple of (longitude, latitude) in WGS84 decimal degrees
-    
+
     Returns:
         tuple: (x, y) coordinates in the grid's coordinate reference system
     """
@@ -164,7 +175,6 @@ def convert_to_utm(grid: sGrid, coords_wgs84: tuple[float, float]) -> tuple[floa
     print(f"Grid CRS: {grid.crs}")
     print(f"Grid extent: {grid.extent}")
     print(f"Target coordinates WGS84 (long, lat): {coords_wgs84}")
-
 
     # Create transformer from WGS84 to grid's CRS
     transformer = Transformer.from_crs("EPSG:4326", grid.crs, always_xy=True)
