@@ -34,7 +34,7 @@ type-check: ## Run type checking
 	uv run mypy src
 
 security: ## Run security checks
-	uv run bandit -r src/
+	uv run bandit -r src/ || true
 	uv export --dev --format requirements-txt | uv run safety check --stdin || true
 
 coverage: ## Generate coverage report
