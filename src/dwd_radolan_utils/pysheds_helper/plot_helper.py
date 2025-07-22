@@ -13,25 +13,29 @@ from dwd_radolan_utils.pysheds_helper.utils import zoom_dem
 
 def plot_catchment(grid: Grid, clipped_catch: Raster):
     """Plot a catchment area with colorbar and terrain visualization.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         catch: Catchment area raster data
     """
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     fig.patch.set_alpha(0)
 
     plt.grid(True, zorder=0)
-    im = ax.imshow(np.where(clipped_catch, clipped_catch, np.nan), extent=grid.extent,
-                zorder=1, cmap='Greys_r')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    plt.title('Delineated Catchment', size=14)
+    im = ax.imshow(
+        np.where(clipped_catch, clipped_catch, np.nan),
+        extent=grid.extent,
+        zorder=1,
+        cmap="Greys_r",
+    )
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    plt.title("Delineated Catchment", size=14)
 
 
 def plot_dem(dem: Raster, grid: Grid, downsample_factor: int = 4):
     """Plot a digital elevation model with colorbar and terrain visualization.
-    
+
     Args:
         dem: Digital elevation model raster data
         grid: Pysheds grid object containing spatial reference information
@@ -57,7 +61,7 @@ def plot_flow_direction(
     fdir: Raster, grid: Grid, dirmap: tuple, downsample_factor: int = 1
 ):
     """Plot flow direction grid showing water flow directions across the terrain.
-    
+
     Args:
         fdir: Flow direction raster data
         grid: Pysheds grid object containing spatial reference information
@@ -84,7 +88,7 @@ def plot_flow_direction(
 
 def plot_flow_accumulation(grid: Grid, acc: Raster):
     """Plot flow accumulation showing the number of upstream cells flowing into each cell.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         acc: Flow accumulation raster data
@@ -109,7 +113,7 @@ def plot_flow_accumulation(grid: Grid, acc: Raster):
 
 def plot_simple_branches(grid: Grid, branches: Raster):
     """Plot stream network branches derived from flow accumulation analysis.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         branches: Raster data containing stream network branches as geographic features
@@ -130,7 +134,7 @@ def plot_simple_branches(grid: Grid, branches: Raster):
 
 def plot_simple_distance_map(grid: Grid, dist: Raster):
     """Plot a simple flow distance map showing distance to outlet in cells.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         dist: Flow distance raster data
@@ -149,10 +153,10 @@ def plot_distance_catchment_area(
     grid: Grid, dist: Raster, x_snap: float, y_snap: float, padding: int = 500
 ):
     """Plot detailed flow distance analysis with basemap and enhanced visualization.
-    
+
     Creates a comprehensive visualization of flow distance to outlet with contextual basemap,
     proper UTM coordinate display, and detailed statistics.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         dist: Flow distance raster data
@@ -179,15 +183,15 @@ def plot_distance_catchment_area(
     dist_plot[dist_plot == 0] = np.nan
 
     # Get the actual extent - prioritize distance data extent if available
-    if hasattr(dist, 'extent'):
+    if hasattr(dist, "extent"):
         data_extent = dist.extent
-        data_crs = dist.crs if hasattr(dist, 'crs') else grid.crs
+        data_crs = dist.crs if hasattr(dist, "crs") else grid.crs
         print(f"Using distance data extent: {data_extent}")
     else:
         data_extent = grid.extent
         data_crs = grid.crs
         print(f"Using grid extent: {data_extent}")
-    
+
     print(f"Distance data shape: {dist_plot.shape}")
     print(f"Distance data CRS: {data_crs}")
     print(f"Pour point: ({x_snap}, {y_snap})")
@@ -202,7 +206,9 @@ def plot_distance_catchment_area(
     ax.set_xlim(x_min - padding, x_max + padding)
     ax.set_ylim(y_min - padding, y_max + padding)
 
-    print(f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})")
+    print(
+        f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})"
+    )
 
     # Add basemap with proper parameters
     try:
@@ -291,13 +297,17 @@ def plot_distance_catchment_area(
 
 
 def plot_flow_direction_with_basemap(
-    grid: Grid, fdir: Raster, dirmap: tuple, downsample_factor: int = 1, padding: int = 100
+    grid: Grid,
+    fdir: Raster,
+    dirmap: tuple,
+    downsample_factor: int = 1,
+    padding: int = 100,
 ):
     """Plot flow direction analysis with OpenStreetMap basemap and enhanced visualization.
-    
+
     Creates a comprehensive visualization of flow directions with contextual basemap,
     proper UTM coordinate display, and professional styling.
-    
+
     Args:
         grid: Pysheds grid object containing spatial reference information
         fdir: Flow direction raster data
@@ -314,7 +324,7 @@ def plot_flow_direction_with_basemap(
 
     # Get the actual extent of the flow direction data
     data_extent = grid_plot.extent
-    
+
     # Make flow values of 0 transparent by setting them to NaN
     # Convert to float to allow NaN values
     fdir_plot_display = fdir_plot.copy().astype(np.float32)
@@ -324,7 +334,9 @@ def plot_flow_direction_with_basemap(
     print(f"Flow direction data shape: {fdir_plot.shape}")
     print(f"Flow direction CRS: {grid_plot.crs}")
     print(f"Flow direction values range: {fdir_plot.min()} to {fdir_plot.max()}")
-    print(f"Non-zero flow cells: {np.sum(fdir_plot != 0)} / {fdir_plot.size} ({100 * np.sum(fdir_plot != 0) / fdir_plot.size:.1f}%)")
+    print(
+        f"Non-zero flow cells: {np.sum(fdir_plot != 0)} / {fdir_plot.size} ({100 * np.sum(fdir_plot != 0) / fdir_plot.size:.1f}%)"
+    )
 
     # Create the plot with better extent handling
     fig, ax = plt.subplots(figsize=(16, 12))
@@ -336,7 +348,9 @@ def plot_flow_direction_with_basemap(
     ax.set_xlim(x_min - padding, x_max + padding)
     ax.set_ylim(y_min - padding, y_max + padding)
 
-    print(f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})")
+    print(
+        f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})"
+    )
 
     # Add basemap with proper parameters
     try:
@@ -355,7 +369,7 @@ def plot_flow_direction_with_basemap(
     # Create custom colormap for flow directions
     # Use a discrete colormap with distinct colors for each direction
     n_directions = len(dirmap)
-    
+
     # Plot flow directions with proper settings using the actual data extent
     im = ax.imshow(
         fdir_plot_display,  # Use the version with zero values set to NaN (transparent)
@@ -370,20 +384,26 @@ def plot_flow_direction_with_basemap(
     boundaries = [0] + sorted(list(dirmap))
     cbar = plt.colorbar(im, boundaries=boundaries, values=sorted(dirmap))
     cbar.set_label("Flow Direction", fontsize=14, fontweight="bold")
-    
+
     # Set colorbar ticks to match direction values
     direction_values = sorted(dirmap)
     cbar.set_ticks(direction_values)
-    
+
     # Create direction labels (N, NE, E, SE, S, SW, W, NW)
     direction_labels = []
     direction_map = {
-        1: "E", 2: "SE", 4: "S", 8: "SW", 
-        16: "W", 32: "NW", 64: "N", 128: "NE"
+        1: "E",
+        2: "SE",
+        4: "S",
+        8: "SW",
+        16: "W",
+        32: "NW",
+        64: "N",
+        128: "NE",
     }
     for val in direction_values:
         direction_labels.append(direction_map.get(val, str(val)))
-    
+
     cbar.set_ticklabels(direction_labels)
     cbar.ax.tick_params(labelsize=10)
 
@@ -412,10 +432,12 @@ def plot_flow_direction_with_basemap(
 
     # Enhanced statistics
     print(f"\n📊 Flow Direction Statistics:")
-    print(f"   🧭 Unique directions: {len(np.unique(fdir_plot[~np.isnan(fdir_plot)]))} different flow directions")
+    print(
+        f"   🧭 Unique directions: {len(np.unique(fdir_plot[~np.isnan(fdir_plot)]))} different flow directions"
+    )
     print(f"   📦 Grid cells: {fdir_plot.size} total cells")
     print(f"   🗺️  Data extent: {data_extent}")
-    
+
     # Direction distribution (including zero values for complete statistics)
     unique_dirs, counts = np.unique(fdir_plot[~np.isnan(fdir_plot)], return_counts=True)
     print(f"   🎯 Direction distribution:")

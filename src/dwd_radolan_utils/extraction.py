@@ -321,7 +321,14 @@ def extract_time_series_from_radar(
         ts_array[:, i] = ts
 
     if save:
-        save_ts_array(ts_array, timestamps, save_path, save_column_names, save_file_format, save_index_name)
+        save_ts_array(
+            ts_array,
+            timestamps,
+            save_path,
+            save_column_names,
+            save_file_format,
+            save_index_name,
+        )
 
     return ts_array, timestamps
 

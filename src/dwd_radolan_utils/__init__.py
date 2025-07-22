@@ -3,7 +3,7 @@ DWD RADOLAN Utils - Python utilities for downloading and processing DWD RADOLAN 
 
 This package provides utilities for:
 - Downloading DWD RADOLAN data
-- Creating extraction grids from shapes and coordinates  
+- Creating extraction grids from shapes and coordinates
 - Extracting time series from radar data
 - Catchment area extraction using pysheds
 """
@@ -17,7 +17,7 @@ __author__ = "Your Name"
 
 __all__ = [
     "dwd_radolan_download",
-    "compute_catchement_for_location",  
+    "compute_catchement_for_location",
     "compute_multiple_catchments",
     "extract_time_series_from_radar",
-] 
+]
