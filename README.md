@@ -1,7 +1,7 @@
 # DWD RADOLAN Utils
 
-[![CI/CD Pipeline](https://github.com/yourusername/dwd-radolan-utils/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/yourusername/dwd-radolan-utils/actions)
-[![codecov](https://codecov.io/gh/yourusername/dwd-radolan-utils/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/dwd-radolan-utils)
+[![CI/CD Pipeline](https://github.com/yahah100/dwd-radolan-utils/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/yahah100/dwd-radolan-utils/actions)
+[![codecov](https://codecov.io/gh/yahah100/dwd-radolan-utils/branch/main/graph/badge.svg)](https://codecov.io/gh/yahah100/dwd-radolan-utils)
 [![PyPI version](https://badge.fury.io/py/dwd-radolan-utils.svg)](https://badge.fury.io/py/dwd-radolan-utils)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -28,7 +28,7 @@ pip install dwd-radolan-utils
 ### From source
 
 ```bash
-git clone https://github.com/yourusername/dwd-radolan-utils.git
+git clone https://github.com/yahah100/dwd-radolan-utils.git
 cd dwd-radolan-utils
 pip install -e .
 ```
@@ -36,7 +36,7 @@ pip install -e .
 ### Development installation
 
 ```bash
-git clone https://github.com/yourusername/dwd-radolan-utils.git
+git clone https://github.com/yahah100/dwd-radolan-utils.git
 cd dwd-radolan-utils
 uv sync --dev
 ```
@@ -108,7 +108,7 @@ This project uses modern Python development tools and practices.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and install
-git clone https://github.com/yourusername/dwd-radolan-utils.git
+git clone https://github.com/yahah100/dwd-radolan-utils.git
 cd dwd-radolan-utils
 uv sync --dev
 
@@ -291,9 +291,6 @@ If you use this package in research, please cite:
 
 ```bibtex
 @software{dwd_radolan_utils,
-  title={DWD RADOLAN Utils: Python utilities for German weather radar data},
-  author={Your Name},
-  year={2024},
-  url={https://github.com/yourusername/dwd-radolan-utils}
+    TODO
 }
 ```

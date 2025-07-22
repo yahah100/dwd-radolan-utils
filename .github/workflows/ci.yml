@@ -34,7 +34,6 @@ jobs:
     - name: Install dependencies
       run: |
         uv sync --dev
-        uv pip install --system -e .
 
     - name: Lint with ruff
       run: |
@@ -75,7 +74,7 @@ jobs:
 
     - name: Run safety check
       run: |
-        uv run safety check --file requirements.txt || true
+        uv export --dev --format requirements-txt | uv run safety check --stdin || true
 
     - name: Run bandit security linter
       run: |
