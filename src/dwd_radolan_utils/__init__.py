@@ -9,8 +9,7 @@ This package provides utilities for:
 """
 
 from .download import download_dwd as dwd_radolan_download
-# from .grid import create_extraction_grid  # Function doesn't exist yet
-# from .extraction import extract_time_series_from_radar  # Function doesn't exist yet
+from .extraction import extract_time_series_from_radar
 from .catchment_area import compute_catchement_for_location, compute_multiple_catchments
 
 __version__ = "0.1.0"
@@ -18,8 +17,7 @@ __author__ = "Your Name"
 
 __all__ = [
     "dwd_radolan_download",
-    # "create_extraction_grid", 
-    # "extract_time_series_from_radar",
     "compute_catchement_for_location",  
     "compute_multiple_catchments",
+    "extract_time_series_from_radar",
 ] 
