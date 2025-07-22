@@ -112,7 +112,7 @@ def compute_catchment_area(
     return clipped_catch, dist, (x_snap, y_snap)
 
 
-def compute_catchement_for_location(coordinates: tuple[float, float], downsample_factor: int = 10) -> tuple[sRaster, sGrid]:
+def compute_catchement_for_location(coordinates: tuple[float, float], downsample_factor: int = 10, data_dir: Path = Path("data/dgm")) -> tuple[sRaster, sGrid]:
     """Compute the catchment area and distance to outlet for a given location.
 
     Args:
@@ -120,6 +120,8 @@ def compute_catchement_for_location(coordinates: tuple[float, float], downsample
             pour point where the catchment will be delineated
         downsample_factor (int, optional): Factor by which to downsample the DEM for faster processing.
             Defaults to 10.
+        data_dir (Path, optional): Directory containing the DEM mosaic file.
+            Defaults to Path("data/dgm").
 
     Returns:
         tuple[Raster, Grid, int, int]: A tuple containing:
@@ -134,7 +136,7 @@ def compute_catchement_for_location(coordinates: tuple[float, float], downsample
 
     The example uses coordinates for Kluse discharge station (51.255604, 7.158556).
     """
-    inflated_dem, grid = load_inflated_dem(downsample_factor=downsample_factor)
+    inflated_dem, grid = load_inflated_dem(downsample_factor=downsample_factor, data_dir=data_dir)
 
     dirmap = (64, 128, 1, 2, 4, 8, 16, 32)
 
@@ -147,7 +149,7 @@ def compute_catchement_for_location(coordinates: tuple[float, float], downsample
     return dist, grid
 
 
-def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsample_factor: int = 50) -> tuple[list[sRaster], list[sGrid]]:
+def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsample_factor: int = 50, data_dir: Path = Path("data/dgm")) -> tuple[list[sRaster], list[sGrid]]:
     """Compute the catchment area and distance to outlet for a list of locations.
 
     Args:
@@ -155,6 +157,8 @@ def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsamp
             pour points where the catchment will be delineated
         downsample_factor (int, optional): Factor by which to downsample the DEM for faster processing.
             Defaults to 50.
+        data_dir (Path, optional): Directory containing the DEM mosaic file.
+            Defaults to Path("data/dgm").
 
     Returns:
         tuple[Raster, Grid]: A tuple containing:
@@ -165,7 +169,7 @@ def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsamp
     dist_list = []
     grid_list = []
     for coordinate in coordinates:
-        dist, grid = compute_catchement_for_location(coordinate, downsample_factor)
+        dist, grid = compute_catchement_for_location(coordinate, downsample_factor, data_dir=data_dir)
         dist_list.append(dist)
         grid_list.append(grid)
     return dist_list, grid_list
@@ -382,8 +386,8 @@ def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.n
 
 def main():
     kluse_dis_wgs84 = (7.158556, 51.255604)
-    # compute_catchement_for_location(kluse_dis_wgs84, downsample_factor=50)
-    dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50)
+    data_dir = Path("data/dgm")
+    dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50, data_dir=data_dir)
 
     new_grid = convert_grid_to_radolan_grid(dist, grid)
     # new_grid = normalize_dist_map(new_grid)
