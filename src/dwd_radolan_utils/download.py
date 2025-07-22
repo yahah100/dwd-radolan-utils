@@ -8,13 +8,13 @@ from the German Weather Service (DWD).
 import requests
 import logging as log
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 import shutil
 import tarfile
 import gzip
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from datetime import datetime
 import bz2
 import wradlib as wrl
@@ -44,11 +44,17 @@ def list_dwd_files_for_var(url: str):
         raise Exception(f"Failed to download files from {url}")
     soup = BeautifulSoup(page.content, 'html.parser')
     links = soup.find_all("a")
-    links = [link.get("href") for link in links]    
+    # Properly handle BeautifulSoup link types
+    file_links = []
+    for link in links:
+        if isinstance(link, Tag):
+            href = link.get("href")
+            if href and isinstance(href, str):
+                file_links.append(href)
     # remove parent directory link
-    links = [link for link in links if link != "../"]
-    log.debug(f"Found the following links: {links}")
-    return links
+    file_links = [link for link in file_links if link != "../"]
+    log.debug(f"Found the following links: {file_links}")
+    return file_links
 
 
 def convert_time_str(time_str: str):
@@ -62,12 +68,30 @@ def convert_time_str(time_str: str):
         str: The converted time string.
     """
     new_time: datetime
-    try:
-        # Try the original format first
-        new_time = datetime.strptime(time_str, "%Y%m%d%H%M%S")
-    except ValueError:
-        # If that fails, try the shorter format
-        new_time = datetime.strptime(time_str, "%y%m%d%H%M")
+    
+    # Check string length to determine format
+    if len(time_str) == 14:
+        # Long format: YYYYMMDDHHMMSS
+        try:
+            new_time = datetime.strptime(time_str, "%Y%m%d%H%M%S")
+        except ValueError:
+            raise ValueError(f"Unable to parse time string: {time_str}")
+    elif len(time_str) == 10:
+        # Short format: YYMMDDHHMM
+        try:
+            new_time = datetime.strptime(time_str, "%y%m%d%H%M")
+        except ValueError:
+            raise ValueError(f"Unable to parse time string: {time_str}")
+    else:
+        # Try both formats as fallback
+        try:
+            new_time = datetime.strptime(time_str, "%Y%m%d%H%M%S")
+        except ValueError:
+            try:
+                new_time = datetime.strptime(time_str, "%y%m%d%H%M")
+            except ValueError:
+                raise ValueError(f"Unable to parse time string: {time_str}")
+    
     time_str = new_time.strftime("%Y%m%d-%H%M")
     return time_str
 
@@ -87,16 +111,33 @@ def convert_dwd_filename(file_name: Path, separator: str = "-", historical_data:
 
     if historical_data:
         # historical data format RW202201.tar
-        file_stem, file_ending = file_stem.split(".") 
-        time_part = file_stem[2:]
+        if "." in file_stem:
+            file_stem, file_ending = file_stem.split(".", 1) 
+            time_part = file_stem[2:]
+        else:
+            # Handle case where there's no dot in the stem (e.g., compressed files)
+            time_part = file_stem[2:] if len(file_stem) > 2 else file_stem
+            file_ending = "tar"
         
         date_str = datetime.strptime(time_part, "%Y%m").strftime("%Y%m%d-%H%M")            
         final_file_name = f"radolan_historical_{date_str}.{file_ending}{file_suffix}"
     else:
         file_name_split = file_stem.split(separator)
-        time_str = file_name_split[2] if is_recent else file_name_split[1]
-        final_file_name = convert_time_str(time_str)
-        final_file_name = f"radolan_recent_{final_file_name}.bin"
+        
+        # Handle different filename formats gracefully
+        if len(file_name_split) < 3:
+            # If filename doesn't have expected format, use the whole stem as time string
+            time_str = file_stem
+        else:
+            # For DWD filenames like "raa01-rw-2401011200-dwd---bin", time is always at position 2
+            time_str = file_name_split[2]
+        
+        try:
+            final_file_name = convert_time_str(time_str)
+            final_file_name = f"radolan_recent_{final_file_name}.bin"
+        except ValueError:
+            # If time parsing fails, use original filename with prefix
+            final_file_name = f"radolan_recent_{file_stem}.bin"
     return final_file_name
 
 def get_suffix(file_name: Path):
@@ -241,11 +282,11 @@ def get_month_year_list(start_date: datetime, end_date: datetime) -> list[tuple[
 def save_to_npz_files(data: np.ndarray, time_list: list[datetime], save_path: Path):
     file_name = f"{time_list[0].year}{time_list[0].month:02d}{time_list[0].day:02d}-{time_list[-1].year}{time_list[-1].month:02d}{time_list[-1].day:02d}"
     save_path.mkdir(parents=True, exist_ok=True)
-    time_list = np.array(object=time_list, dtype="datetime64")
+    time_array = np.array(object=time_list, dtype="datetime64")
     data_save_path = save_path.joinpath(file_name).with_suffix(".npz")
     np.savez_compressed(data_save_path, data=data)
     time_path = save_path.joinpath(file_name + "_time").with_suffix(".npz")
-    np.savez_compressed(time_path, time_list)
+    np.savez_compressed(time_path, time_array)
 
 
 def download_dwd(type_radolan: TypeRadarData, start: datetime | None, end: datetime | None, save_path: Path = Path("data/dwd/")):
@@ -316,6 +357,7 @@ def download_one_month(year: int, month: int, type_radolan: TypeRadarData, save_
         list_files = [file for file in list_files if file.endswith(f"{year}{month:02}.tar.gz")]
         if len(list_files) == 0:
             log.warning(f"No files found for year {year} and month {month}")
+            return  # Exit early if no files found
         elif len(list_files) > 1:
             log.warning(f"Multiple files found for year {year} and month {month}")
             return
@@ -326,8 +368,8 @@ def download_one_month(year: int, month: int, type_radolan: TypeRadarData, save_
 
 def main():
     type_radolan: TypeRadarData = "recent"
-    start_date = datetime(year=2025, month=6, day=1)
-    end_date = datetime(year=2025, month=7, day=1)
+    start_date = datetime(year=2025, month=5, day=1)
+    end_date = datetime(year=2025, month=5, day=3)
 
     download_dwd(type_radolan=type_radolan, start=start_date, end=end_date)
 
