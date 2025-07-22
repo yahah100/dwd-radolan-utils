@@ -8,9 +8,9 @@ This package provides utilities for:
 - Catchment area extraction using pysheds
 """
 
+from .catchment_area import compute_catchement_for_location, compute_multiple_catchments
 from .download import download_dwd as dwd_radolan_download
 from .extraction import extract_time_series_from_radar
-from .catchment_area import compute_catchement_for_location, compute_multiple_catchments
 
 __version__ = "0.1.0"
 __author__ = "Your Name"

@@ -2,22 +2,22 @@
 Tests for the catchment_area module.
 """
 
-import pytest
-import numpy as np
-import time
 import logging
+import time
 from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import Mock, patch
+
+import numpy as np
 
 from dwd_radolan_utils.catchment_area import (
-    load_inflated_dem,
     compute_accumulation,
-    compute_catchment_area,
     compute_catchement_for_location,
+    compute_catchment_area,
     compute_multiple_catchments,
+    convert_grid_to_radolan_grid,
     convert_grid_to_radolan_grid_loops,
     convert_grid_to_radolan_grid_vectorized,
-    convert_grid_to_radolan_grid,
+    load_inflated_dem,
 )
 
 
@@ -250,7 +250,9 @@ class TestComputeMultipleCatchments:
         # Mock return values for each location
         mock_dists = [Mock(), Mock(), Mock()]
         mock_grids = [Mock(), Mock(), Mock()]
-        mock_compute_single.side_effect = list(zip(mock_dists, mock_grids))
+        mock_compute_single.side_effect = list(
+            zip(mock_dists, mock_grids, strict=False)
+        )
 
         dist_list, grid_list = compute_multiple_catchments(
             coordinates, downsample_factor=25

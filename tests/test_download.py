@@ -2,30 +2,26 @@
 Tests for the download module.
 """
 
-import pytest
-import requests
-from pathlib import Path
 from datetime import datetime
-from unittest.mock import patch, Mock, MagicMock, mock_open
-from bs4 import BeautifulSoup
+from pathlib import Path
+from unittest.mock import Mock, mock_open, patch
+
 import numpy as np
-import shutil
+import pytest
 
 from dwd_radolan_utils.download import (
-    list_dwd_files_for_var,
-    convert_time_str,
     convert_dwd_filename,
-    get_suffix,
+    convert_time_str,
     dowload_file_and_save,
-    download_radolan_data,
-    download_historical_radolan_data,
-    filter_by_month,
-    filter_by_year_links,
-    filter_by_start_end,
-    get_month_year_list,
-    save_to_npz_files,
     download_dwd,
     download_one_month,
+    filter_by_month,
+    filter_by_start_end,
+    filter_by_year_links,
+    get_month_year_list,
+    get_suffix,
+    list_dwd_files_for_var,
+    save_to_npz_files,
 )
 
 

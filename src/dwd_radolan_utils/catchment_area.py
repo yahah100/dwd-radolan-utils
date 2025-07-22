@@ -1,13 +1,13 @@
-from pathlib import Path
 import logging
+from pathlib import Path
+
 import numpy as np
+from pyproj import CRS, Transformer
 from pysheds.sgrid import sGrid
 from pysheds.sview import Raster as sRaster
-from pyproj import CRS, Transformer
 
-from dwd_radolan_utils.pysheds_helper.utils import zoom_dem, convert_to_utm, load_dem
-from dwd_radolan_utils.pysheds_helper.plot_helper import plot_distance_catchment_area
 from dwd_radolan_utils.geo_utils import get_wgs84_grid
+from dwd_radolan_utils.pysheds_helper.utils import convert_to_utm, load_dem, zoom_dem
 
 
 def load_inflated_dem(
@@ -31,13 +31,13 @@ def load_inflated_dem(
 
     dem, grid = zoom_dem(dem, grid, downsample_factor=downsample_factor)
 
-    logging.info(f"Filling pits")
+    logging.info("Filling pits")
     pit_filled_dem = grid.fill_pits(dem)
 
-    logging.info(f"Filling depressions")
+    logging.info("Filling depressions")
     flooded_dem = grid.fill_depressions(pit_filled_dem)
 
-    logging.info(f"Resolving flats")
+    logging.info("Resolving flats")
     inflated_dem: sRaster = grid.resolve_flats(flooded_dem)
     inflated_dem[inflated_dem < 0] = inflated_dem.nodata
     return inflated_dem, grid
@@ -59,9 +59,9 @@ def compute_accumulation(
             - acc (Raster): Flow accumulation raster showing the number of upstream cells
             - fdir (Raster): Flow direction raster showing the direction of steepest descent
     """
-    logging.info(f"Computing flow directions")
+    logging.info("Computing flow directions")
     fdir: sRaster = grid.flowdir(inflated_dem, dirmap=dirmap)
-    logging.info(f"Computing flow accumulation")
+    logging.info("Computing flow accumulation")
     acc: sRaster = grid.accumulation(fdir, dirmap=dirmap)
     return acc, fdir
 
@@ -311,8 +311,7 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
         if hasattr(grid, "affine") and grid.affine is not None:
             # Use the affine transform (most accurate method)
             affine = grid.affine
-            # Convert world coordinates to pixel coordinates using affine inverse
-            inverse_affine = ~affine
+            # Convert world coordinates to pixel coordinates using affine
             col_indices = np.round((x_transformed - affine.c) / affine.a).astype(int)
             row_indices = np.round((y_transformed - affine.f) / affine.e).astype(int)
         else:
@@ -417,7 +416,7 @@ def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.n
     """
 
     new_grid_list = []
-    for dist_single, grid_single in zip(dist, grid):
+    for dist_single, grid_single in zip(dist, grid, strict=False):
         new_grid = convert_grid_to_radolan_grid_vectorized(dist_single, grid_single)
         new_grid_list.append(new_grid)
 

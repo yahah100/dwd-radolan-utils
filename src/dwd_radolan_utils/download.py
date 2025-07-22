@@ -5,21 +5,20 @@ This module provides functionality to download RADOLAN radar precipitation data
 from the German Weather Service (DWD).
 """
 
-import requests
+import bz2
+import gzip
 import logging as log
-from pathlib import Path
-from typing import Literal, cast
-
-import numpy as np
 import shutil
 import tarfile
-import gzip
-from bs4 import BeautifulSoup, Tag
 from datetime import datetime
-import bz2
-import wradlib as wrl
-from tqdm import tqdm
+from pathlib import Path
+from typing import Literal
 
+import numpy as np
+import requests
+import wradlib as wrl
+from bs4 import BeautifulSoup, Tag
+from tqdm import tqdm
 
 TypeRadarData = Literal[
     "recent",  # current year
@@ -342,7 +341,7 @@ def download_dwd(
         radolan_url = "https://opendata.dwd.de/weather/radar/radolan/rw/"
         list_files = list_dwd_files_for_var(radolan_url)
         list_files = [file for file in list_files if file.endswith(".bz2")]
-        log.info(f"Ignoring start and end date for type 'now'")
+        log.info("Ignoring start and end date for type 'now'")
         raise Exception("Not implemented yet")
 
     elif type_radolan == "recent" and start is not None and end is not None:
@@ -378,7 +377,7 @@ def download_dwd(
 
     elif type_radolan == "historical" and start is not None and end is not None:
         log.info(f"Downloading historical data from {start} to {end} to {save_path}")
-        log.warning(f"Downloading historical data always downloads the whole month")
+        log.warning("Downloading historical data always downloads the whole month")
         year_month_list = get_month_year_list(start_date=start, end_date=end)
 
         for year, month in year_month_list:
