@@ -35,7 +35,7 @@ type-check: ## Run type checking
 
 security: ## Run security checks
 	uv run bandit -r src/
-	uv run safety check --file requirements.txt || true
+	uv export --dev --format requirements-txt | uv run safety check --stdin || true
 
 coverage: ## Generate coverage report
 	uv run coverage run -m pytest
