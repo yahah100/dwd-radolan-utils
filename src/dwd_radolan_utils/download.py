@@ -166,7 +166,7 @@ def extract_tar_file(new_file: Path, new_unpacked_file: Path, suffix: str):
             extraction_successful = True
             log.debug("Successfully extracted as gzipped tar")
         except (tarfile.ReadError, OSError) as e:
-            log.warning(f"Failed to extract as gzipped tar: {e}")
+            log.debug(f"Failed to extract as gzipped tar: {e}")
             # File might not be gzipped despite the extension
     
     # If gzipped extraction failed, try as plain tar
@@ -236,7 +236,7 @@ def dowload_file_and_save(
         if len(list_files_tar) == 0 and len(list_files_bin) >= 1:
             return new_unpacked_file
         elif len(list_files_tar) >= 1 and len(list_files_bin) == 0:
-            log.warning(f"Multiple tar files found in {new_unpacked_file}, need further extraction")
+            log.debug(f"Multiple tar files found in {new_unpacked_file}, need further extraction")
             for tar_file in list_files_tar:
                 log.debug(f"Extracting tar file {tar_file} to {new_unpacked_file}")
                 _ = extract_tar_file(tar_file, new_unpacked_file, suffix)
@@ -393,7 +393,7 @@ def download_dwd(
 
     elif type_radolan == "historical" and start is not None and end is not None:
         log.info(f"Downloading historical data from {start} to {end} to {save_path}")
-        log.warning("Downloading historical data always downloads the whole month, and at least one month")
+        log.debug("Downloading historical data always downloads the whole month, and at least one month")
         year_month_list = get_month_year_list(start_date=start, end_date=end)
 
         for year, month in year_month_list:
