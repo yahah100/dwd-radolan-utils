@@ -108,8 +108,8 @@ def mock_radar_files(temp_directory):
         radar_file = temp_directory / f"{date_str}-{date_str}.npz"
         time_file = temp_directory / f"{date_str}-{date_str}_time.npz"
         
-        # Sample data
-        sample_data = np.random.rand(24, 50, 50) * 30
+        # Sample data with consistent dimensions (80x80 to match min_max_dict)
+        sample_data = np.random.rand(24, 80, 80) * 30
         sample_times = np.array([
             base_date.replace(day=i+1, hour=h) for h in range(24)
         ], dtype='datetime64')
@@ -167,14 +167,18 @@ def mock_pysheds_raster():
     """Create a mock pysheds Raster object for testing."""
     mock_raster = Mock()
     mock_raster.shape = (100, 100)
-    mock_raster.nodata = -9999
+    mock_raster.nodata = np.float32(-9999)
     
     # Create sample raster data
-    data = np.random.rand(100, 100) * 500  # Sample elevation data
+    data = np.random.rand(100, 100).astype(np.float32) * 500  # Sample elevation data
     data[0:10, 0:10] = mock_raster.nodata  # Some nodata values
     
-    # Make the mock behave like a numpy array for indexing
+    # Make the mock behave like a numpy array for indexing and comparisons
     mock_raster.__getitem__ = lambda self, key: data[key]
     mock_raster.__setitem__ = lambda self, key, value: data.__setitem__(key, value)
+    mock_raster.__lt__ = lambda self, other: data < other
+    mock_raster.__gt__ = lambda self, other: data > other
+    mock_raster.__ge__ = lambda self, other: data >= other
+    mock_raster.__le__ = lambda self, other: data <= other
     
     return mock_raster 

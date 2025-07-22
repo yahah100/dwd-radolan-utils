@@ -394,76 +394,13 @@ def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.n
     return np.stack(new_grid_list)
 
 
-def benchmark_conversion_methods(dist: sRaster, grid: sGrid) -> dict:
-    """
-    Benchmark both conversion methods and compare their performance.
-    
-    Args:
-        dist (sRaster): Distance raster showing flow distances
-        grid (sGrid): The Grid object containing the flow data
-    
-    Returns:
-        dict: Benchmark results including timing and validation information
-    """
-    import time
-    
-    logging.info("Starting benchmark comparison of conversion methods...")
-    
-    # Test vectorized method
-    logging.info("Testing vectorized method...")
-    start_time = time.time()
-    result_vectorized = convert_grid_to_radolan_grid_vectorized(dist, grid)
-    vectorized_time = time.time() - start_time
-    
-    # Test loop method
-    logging.info("Testing loop method...")
-    start_time = time.time()
-    result_loops = convert_grid_to_radolan_grid_loops(dist, grid)
-    loops_time = time.time() - start_time
-    
-    # Compare results
-    valid_vectorized = np.sum(~np.isnan(result_vectorized))
-    valid_loops = np.sum(~np.isnan(result_loops))
-    
-    # Check if results are approximately equal (within tolerance)
-    tolerance = 1e-6
-    close_match = np.allclose(result_vectorized, result_loops, equal_nan=True, rtol=tolerance)
-    
-    # Calculate speedup
-    speedup = loops_time / vectorized_time if vectorized_time > 0 else float('inf')
-    
-    benchmark_results = {
-        'vectorized_time': vectorized_time,
-        'loops_time': loops_time,
-        'speedup': speedup,
-        'valid_cells_vectorized': valid_vectorized,
-        'valid_cells_loops': valid_loops,
-        'results_match': close_match,
-        'total_cells': 900 * 900
-    }
-    
-    # Print results
-    logging.info("=" * 60)
-    logging.info("BENCHMARK RESULTS")
-    logging.info("=" * 60)
-    logging.info(f"Vectorized method time: {vectorized_time:.3f} seconds")
-    logging.info(f"Loop method time:       {loops_time:.3f} seconds")
-    logging.info(f"Speedup:               {speedup:.1f}x faster")
-    logging.info(f"Valid cells (vectorized): {valid_vectorized:,} / {900*900:,}")
-    logging.info(f"Valid cells (loops):      {valid_loops:,} / {900*900:,}")
-    logging.info(f"Results match:         {'✅ Yes' if close_match else '❌ No'}")
-    logging.info("=" * 60)
-    
-    return benchmark_results
 
 def main():
     kluse_dis_wgs84 = (7.158556, 51.255604) 
     # compute_catchement_for_location(kluse_dis_wgs84, downsample_factor=50)
     dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50)
     
-    # Benchmark both methods
-    # benchmark_results = benchmark_conversion_methods(dist, grid)
-    
+
     new_grid = convert_grid_to_radolan_grid(dist, grid)
     # new_grid = normalize_dist_map(new_grid)
 
