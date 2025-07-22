@@ -208,7 +208,7 @@ class TestComputeCatchmentForLocation:
         result_dist, result_grid = compute_catchement_for_location(coordinates, downsample_factor=20)
 
         # Verify calls
-        mock_load_dem.assert_called_once_with(downsample_factor=20)
+        mock_load_dem.assert_called_once_with(downsample_factor=20, data_dir=Path("data/dgm"))
         mock_compute_acc.assert_called_once()
         mock_compute_catchment.assert_called_once()
 
