@@ -291,9 +291,6 @@ If you use this package in research, please cite:
 
 ```bibtex
 @software{dwd_radolan_utils,
-  title={DWD RADOLAN Utils: Python utilities for German weather radar data},
-  author={Your Name},
-  year={2024},
-  url={https://github.com/yourusername/dwd-radolan-utils}
+    TODO
 }
 ```
