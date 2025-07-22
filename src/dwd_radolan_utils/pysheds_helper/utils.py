@@ -1,17 +1,16 @@
 import logging
 from pathlib import Path
-import json
-import numpy as np
-from scipy.ndimage import zoom
-import rasterio
-from rasterio.merge import merge
-from tqdm import tqdm
-from pyproj import Transformer
 
+import numpy as np
+import rasterio
+from pyproj import Transformer
+from pysheds.serializer import load_raster, load_sgrid, save_raster, save_sgrid
 from pysheds.sgrid import sGrid
 from pysheds.sview import Raster as sRaster
 from pysheds.sview import ViewFinder
-from pysheds.serializer import save_sgrid, load_sgrid, save_raster, load_raster
+from rasterio.merge import merge
+from scipy.ndimage import zoom
+from tqdm import tqdm
 
 
 def zoom_dem(
@@ -104,7 +103,7 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
         tif_files = list(data_dir.glob("*.tif"))
         src_files_to_mosaic = []
 
-        for i, tif_file in tqdm(enumerate(tif_files)):
+        for _i, tif_file in tqdm(enumerate(tif_files)):
             try:
                 src = rasterio.open(str(tif_file))
                 src_files_to_mosaic.append(src)

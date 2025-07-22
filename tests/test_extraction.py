@@ -2,20 +2,20 @@
 Tests for the extraction module.
 """
 
-import pytest
+from datetime import datetime
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from datetime import datetime
-from unittest.mock import patch, Mock, MagicMock
+import pytest
 
 from dwd_radolan_utils.extraction import (
-    read_radar_data,
-    compute_arg_min_max_dict_nan,
-    compute_arg_min_max_dict_bool,
-    compute_arg_min_max_dict,
     aggregate_ts,
+    compute_arg_min_max_dict,
+    compute_arg_min_max_dict_bool,
+    compute_arg_min_max_dict_nan,
     extract_time_series_from_radar,
+    read_radar_data,
     save_ts_array,
 )
 

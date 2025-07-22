@@ -4,17 +4,14 @@ Integration tests for dwd-radolan-utils.
 These tests verify that different modules work together correctly.
 """
 
-import pytest
-import numpy as np
-import tempfile
-import shutil
-from pathlib import Path
 from datetime import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from dwd_radolan_utils.extraction import extract_time_series_from_radar
-from dwd_radolan_utils.geo_utils import cut_out_shapes
+import numpy as np
+import pytest
+
 from dwd_radolan_utils.download import save_to_npz_files
+from dwd_radolan_utils.extraction import extract_time_series_from_radar
 
 
 class TestIntegrationExtractionAndGeoUtils:

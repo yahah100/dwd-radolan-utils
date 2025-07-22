@@ -1,13 +1,12 @@
-import numpy as np
-import geopandas as gpd
 import contextily as ctx
+import numpy as np
 import seaborn as sns
-from matplotlib import pyplot as plt
 from matplotlib import colors
+from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from shapely.geometry import Point
 from pysheds.grid import Grid
 from pysheds.sview import Raster
+
 from dwd_radolan_utils.pysheds_helper.utils import zoom_dem
 
 
@@ -22,7 +21,7 @@ def plot_catchment(grid: Grid, clipped_catch: Raster):
     fig.patch.set_alpha(0)
 
     plt.grid(True, zorder=0)
-    im = ax.imshow(
+    ax.imshow(
         np.where(clipped_catch, clipped_catch, np.nan),
         extent=grid.extent,
         zorder=1,
@@ -77,7 +76,7 @@ def plot_flow_direction(
     fig.patch.set_alpha(0)
 
     plt.imshow(fdir_zoom, extent=grid.extent, cmap="viridis", zorder=2)
-    boundaries = [0] + sorted(list(dirmap))
+    boundaries = [0] + sorted(dirmap)
     plt.colorbar(boundaries=boundaries, values=sorted(dirmap))
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
@@ -279,7 +278,7 @@ def plot_distance_catchment_area(
     plt.show()
 
     # Enhanced statistics
-    print(f"\n📊 Enhanced Flow Distance Statistics:")
+    print("\n📊 Enhanced Flow Distance Statistics:")
     print(f"   🎯 Pour Point: ({x_snap:.0f}, {y_snap:.0f}) UTM")
     print(f"   📏 Min distance: {np.nanmin(dist_plot):.1f} cells")
     print(f"   📏 Max distance: {np.nanmax(dist_plot):.1f} cells")
@@ -289,7 +288,7 @@ def plot_distance_catchment_area(
 
     # Convert to real-world units (each cell represents downsample_factor meters)
     cell_size = 5  # 5x downsampled from 1m DEM
-    print(f"   🌍 Real distances (approx):")
+    print("   🌍 Real distances (approx):")
     print(f"      Max flow path: {np.nanmax(dist_plot) * cell_size:.0f} meters")
     print(
         f"      Catchment area: {np.sum(~np.isnan(dist_plot)) * cell_size**2 / 10000:.1f} hectares"
@@ -368,7 +367,7 @@ def plot_flow_direction_with_basemap(
 
     # Create custom colormap for flow directions
     # Use a discrete colormap with distinct colors for each direction
-    n_directions = len(dirmap)
+    len(dirmap)
 
     # Plot flow directions with proper settings using the actual data extent
     im = ax.imshow(
@@ -381,7 +380,7 @@ def plot_flow_direction_with_basemap(
     )  # On top of basemap
 
     # Add colorbar with direction labels
-    boundaries = [0] + sorted(list(dirmap))
+    boundaries = [0] + sorted(dirmap)
     cbar = plt.colorbar(im, boundaries=boundaries, values=sorted(dirmap))
     cbar.set_label("Flow Direction", fontsize=14, fontweight="bold")
 
@@ -431,7 +430,7 @@ def plot_flow_direction_with_basemap(
     plt.show()
 
     # Enhanced statistics
-    print(f"\n📊 Flow Direction Statistics:")
+    print("\n📊 Flow Direction Statistics:")
     print(
         f"   🧭 Unique directions: {len(np.unique(fdir_plot[~np.isnan(fdir_plot)]))} different flow directions"
     )
@@ -440,8 +439,8 @@ def plot_flow_direction_with_basemap(
 
     # Direction distribution (including zero values for complete statistics)
     unique_dirs, counts = np.unique(fdir_plot[~np.isnan(fdir_plot)], return_counts=True)
-    print(f"   🎯 Direction distribution:")
-    for dir_val, count in zip(unique_dirs, counts):
+    print("   🎯 Direction distribution:")
+    for dir_val, count in zip(unique_dirs, counts, strict=False):
         if dir_val == 0:
             dir_name = "No Flow (transparent)"
         else:
