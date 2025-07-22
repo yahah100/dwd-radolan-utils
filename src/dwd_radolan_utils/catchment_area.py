@@ -218,7 +218,7 @@ def convert_grid_to_radolan_grid_loops(dist: sRaster, grid: sGrid) -> np.ndarray
     try:
         bounds = grid.extent  # (x_min, x_max, y_min, y_max)
         x_min, x_max, y_min, y_max = bounds
-    except:
+    except (AttributeError, ValueError):
         x_min, x_max = float("-inf"), float("inf")
         y_min, y_max = float("-inf"), float("inf")
 
@@ -294,7 +294,7 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
     try:
         bounds = grid.extent  # (x_min, x_max, y_min, y_max)
         x_min, x_max, y_min, y_max = bounds
-    except:
+    except (AttributeError, ValueError):
         x_min, x_max = float("-inf"), float("inf")
         y_min, y_max = float("-inf"), float("inf")
 

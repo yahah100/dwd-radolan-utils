@@ -61,7 +61,7 @@ allow-direct-references = true
 packages = ["src/dwd_radolan_utils"]
 
 [tool.ruff]
-line-length = 88
+line-length = 140
 target-version = "py313"
 src = ["src", "tests"]
 

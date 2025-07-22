@@ -74,13 +74,13 @@ def convert_time_str(time_str: str):
         try:
             new_time = datetime.strptime(time_str, "%Y%m%d%H%M%S")
         except ValueError:
-            raise ValueError(f"Unable to parse time string: {time_str}")
+            raise ValueError(f"Unable to parse time string: {time_str}") from None
     elif len(time_str) == 10:
         # Short format: YYMMDDHHMM
         try:
             new_time = datetime.strptime(time_str, "%y%m%d%H%M")
         except ValueError:
-            raise ValueError(f"Unable to parse time string: {time_str}")
+            raise ValueError(f"Unable to parse time string: {time_str}") from None
     else:
         # Try both formats as fallback
         try:
@@ -89,7 +89,7 @@ def convert_time_str(time_str: str):
             try:
                 new_time = datetime.strptime(time_str, "%y%m%d%H%M")
             except ValueError:
-                raise ValueError(f"Unable to parse time string: {time_str}")
+                raise ValueError(f"Unable to parse time string: {time_str}") from None
 
     time_str = new_time.strftime("%Y%m%d-%H%M")
     return time_str
@@ -322,7 +322,9 @@ def get_month_year_list(
 
 
 def save_to_npz_files(data: np.ndarray, time_list: list[datetime], save_path: Path):
-    file_name = f"{time_list[0].year}{time_list[0].month:02d}{time_list[0].day:02d}-{time_list[-1].year}{time_list[-1].month:02d}{time_list[-1].day:02d}"
+    start_date = f"{time_list[0].year}{time_list[0].month:02d}{time_list[0].day:02d}"
+    end_date = f"{time_list[-1].year}{time_list[-1].month:02d}{time_list[-1].day:02d}"
+    file_name = f"{start_date}-{end_date}"
     save_path.mkdir(parents=True, exist_ok=True)
     time_array = np.array(object=time_list, dtype="datetime64")
     data_save_path = save_path.joinpath(file_name).with_suffix(".npz")
