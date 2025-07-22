@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Literal
 import logging
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from dwd_radolan_utils.geo_utils import cut_out_shapes
 
@@ -103,11 +104,6 @@ def read_radar_data(
         np_time_data = np_time_data[bool_time_filter]
     logging.info(f"Shape of radar data: {np_radar_data.shape}")
     return np_radar_data, np_time_data
-
-
-def get_extraction_grid(path: Path):
-
-    return np.load(path)
 
 
 def compute_arg_min_max_dict_nan(grid: np.ndarray) -> dict[str, int]:
@@ -247,21 +243,24 @@ def aggregate_ts(
         method (Literal["mean", "sum", "max", "min"]): The method to aggregate the time series
 
     Returns:
-        np.ndarray: The aggregated time series
+        np.ndarray: The aggregated time series of shape (t,)
     """
     if grid.dtype == bool:
         grid = grid.astype(int)
 
+    radar_grid[np.isnan(radar_grid)] = 0
+    grid[np.isnan(grid)] = 0
     timeseries_array = grid * radar_grid
+    logging.info(f"Timeseries array shape: {timeseries_array.shape}")
 
     if method == "mean":
-        return np.mean(timeseries_array, axis=0)
+        return np.mean(timeseries_array, axis=(1, 2))
     elif method == "sum":
-        return np.sum(timeseries_array, axis=0)
+        return np.sum(timeseries_array, axis=(1, 2))
     elif method == "max":
-        return np.max(timeseries_array, axis=0)
+        return np.max(timeseries_array, axis=(1, 2))
     elif method == "min":
-        return np.min(timeseries_array, axis=0)
+        return np.min(timeseries_array, axis=(1, 2))
     else:
         raise ValueError(f"Method {method} not supported")
 
@@ -272,6 +271,11 @@ def extract_time_series_from_radar(
     start_date: datetime | None = None,
     end_date: datetime | None = None,
     grid_aggregation_method: Literal["mean", "sum", "max", "min"] = "mean",
+    save: bool = True,
+    save_path: Path = Path("data/ts.csv"),
+    save_column_names: list[str] | None = None,
+    save_file_format: Literal["csv", "parquet"] = "csv",
+    save_index_name: str = "timestamp",
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Extract time series from radar data using the computed boundaries.
@@ -282,6 +286,11 @@ def extract_time_series_from_radar(
         start_date (datetime | None): Start date of the radar data
         end_date (datetime | None): End date of the radar data
         grid_aggregation_method (Literal["mean", "sum", "max", "min"]): Method to aggregate the time series
+        save (bool): Whether to save the time series array
+        save_path (Path | None): The path to save the time series array
+        save_column_names (list[str] | None): The names of the columns to save
+        save_file_format (Literal["csv", "parquet"]): The file format to save the data
+        save_index_name (str): The name for the index column
 
     Returns:
         tuple[np.ndarray, np.ndarray]: Tuple containing the time series array and the timestamps
@@ -295,6 +304,8 @@ def extract_time_series_from_radar(
 
     ts_array = np.zeros((radolan_grid.shape[0], grid.shape[0]))
 
+    logging.info(f"Extracting time series with target shape: {ts_array.shape}")
+
     # cut the grid to the same shape as the radolan grid
     grid = cut_out_shapes(
         grid,
@@ -305,9 +316,60 @@ def extract_time_series_from_radar(
     )
 
     for i, grid_i in enumerate(grid):
-        ts_array[:, i] = aggregate_ts(grid_i, radolan_grid, grid_aggregation_method)
+        ts = aggregate_ts(grid_i, radolan_grid, grid_aggregation_method)
+        logging.info(f"Timeseries shape: {ts.shape}")
+        ts_array[:, i] = ts
+
+    if save:
+        save_ts_array(ts_array, timestamps, save_path, save_column_names, save_file_format, save_index_name)
 
     return ts_array, timestamps
+
+
+def save_ts_array(
+    ts_array: np.ndarray,
+    timestamps: np.ndarray,
+    path: Path,
+    column_names: list[str] | None = None,
+    file_format: Literal["csv", "parquet"] = "csv",
+    index_name: str = "timestamp",
+) -> None:
+    """
+    Save the time series array to a csv file.
+
+    Args:
+        ts_array (np.ndarray): The time series array to save (t,n) where t is the time dimension and n is the number of time series
+        timestamps (np.ndarray): The timestamps (t,) of the time series
+        path (Path): The path to save the time series array
+        column_names (list[str] | None): The names of the columns to save
+        file_format (Literal["csv", "parquet"]): The file format to save the data
+        index_name (str): The name for the index column
+
+    Returns:
+        None
+    """
+    if column_names is None:
+        column_names = [f"ts_{i}" for i in range(ts_array.shape[1])]
+    logging.info(
+        f"Saving time series to {path} with column names: {column_names} and shape: {ts_array.shape}"
+    )
+    df = pd.DataFrame(ts_array, index=timestamps, columns=column_names)
+    df.index.name = index_name
+    if file_format == "csv":
+        df.to_csv(path)
+    elif file_format == "parquet":
+        df.to_parquet(path)
+    else:
+        raise ValueError(f"File format {file_format} not supported")
+    logging.info(f"Saved time series to {path}")
+
+
+def main():
+    path = Path("data/dwd")
+    grid = np.load(Path("dist_map_kluse.npy"))
+    ts_array, timestamps = extract_time_series_from_radar(grid, path)
+    print(ts_array.shape)
+    print(timestamps.shape)
 
 
 if __name__ == "__main__":
@@ -315,9 +377,4 @@ if __name__ == "__main__":
         level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    path = Path("data/dwd")
-    grid = get_extraction_grid(Path("dist_map_kluse.npy"))
-    ts_array, timestamps = extract_time_series_from_radar(grid, path)
-    print(ts_array.shape)
-    print(timestamps)
-    print(ts_array)
+    main()
