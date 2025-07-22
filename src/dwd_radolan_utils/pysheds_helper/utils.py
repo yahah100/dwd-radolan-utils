@@ -13,9 +13,7 @@ from scipy.ndimage import zoom
 from tqdm import tqdm
 
 
-def zoom_dem(
-    dem: sRaster, grid: sGrid, downsample_factor: int = 4
-) -> tuple[sRaster, sGrid]:
+def zoom_dem(dem: sRaster, grid: sGrid, downsample_factor: int = 4) -> tuple[sRaster, sGrid]:
     """Downsample a DEM raster and corresponding grid by a specified factor.
 
     Reduces the resolution of the DEM data while preserving spatial relationships
@@ -43,9 +41,7 @@ def zoom_dem(
 
         # Convert to float for processing, but we'll convert back
         dem_data = dem.copy()
-        dem_data[dem_data == original_nodata] = (
-            np.nan if original_dtype in [np.float32, np.float64] else 0
-        )
+        dem_data[dem_data == original_nodata] = np.nan if original_dtype in [np.float32, np.float64] else 0
 
         # Apply zoom
         dem_zoom: np.ndarray = zoom(dem_data, zoom_factor, order=1)  # type: ignore
@@ -76,9 +72,7 @@ def zoom_dem(
         return dem_zoom, new_grid
 
     else:
-        raise ValueError(
-            f"Downsample factor must be greater than 0, got {downsample_factor}"
-        )
+        raise ValueError(f"Downsample factor must be greater than 0, got {downsample_factor}")
 
 
 def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
@@ -154,9 +148,7 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
     return dem, grid
 
 
-def convert_to_utm(
-    grid: sGrid, coords_wgs84: tuple[float, float]
-) -> tuple[float, float]:
+def convert_to_utm(grid: sGrid, coords_wgs84: tuple[float, float]) -> tuple[float, float]:
     """Convert WGS84 coordinates to the grid's coordinate reference system.
 
     Transforms longitude/latitude coordinates to the spatial reference system

@@ -30,17 +30,13 @@ class TestReadRadarData:
         with patch("dwd_radolan_utils.extraction.cut_out_shapes") as mock_cut:
             mock_cut.side_effect = lambda x, **kwargs: x  # Return input unchanged
 
-            radar_data, time_data = read_radar_data(
-                path=path, min_max_dict=sample_min_max_dict
-            )
+            radar_data, time_data = read_radar_data(path=path, min_max_dict=sample_min_max_dict)
 
             assert isinstance(radar_data, np.ndarray)
             assert isinstance(time_data, np.ndarray)
             assert radar_data.shape[0] == time_data.shape[0]
 
-    def test_read_radar_data_with_date_filter(
-        self, mock_radar_files, sample_min_max_dict
-    ):
+    def test_read_radar_data_with_date_filter(self, mock_radar_files, sample_min_max_dict):
         """Test radar data reading with date filtering."""
         path = mock_radar_files[0][0].parent
         start_date = datetime(2024, 1, 1)
@@ -205,9 +201,7 @@ class TestExtractTimeSeriesFromRadar:
         mock_cut.side_effect = lambda x, **kwargs: x
 
         # Test the function
-        ts_array, timestamps = extract_time_series_from_radar(
-            grid=sample_boolean_grid, path=temp_directory, save=False
-        )
+        ts_array, timestamps = extract_time_series_from_radar(grid=sample_boolean_grid, path=temp_directory, save=False)
 
         assert isinstance(ts_array, np.ndarray)
         assert isinstance(timestamps, np.ndarray)
