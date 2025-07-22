@@ -157,7 +157,7 @@ def compute_catchement_for_location(coordinates: tuple[float, float], downsample
     return dist, grid
 
 
-def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsample_factor: int = 50) -> tuple[sRaster, sGrid]:
+def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsample_factor: int = 50) -> tuple[list[sRaster], list[sGrid]]:
     """Compute the catchment area and distance to outlet for a list of locations.
     
     Args:
@@ -172,10 +172,13 @@ def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsamp
             - grid (Grid): The Grid object containing the flow data
     """
 
+    dist_list = []
+    grid_list = []
     for coordinate in coordinates:
         dist, grid = compute_catchement_for_location(coordinate, downsample_factor)
-    
-    return dist, grid
+        dist_list.append(dist)
+        grid_list.append(grid)
+    return dist_list, grid_list
 
 
 def convert_grid_to_radolan_grid_loops(dist: sRaster, grid: sGrid) -> np.ndarray:
@@ -367,7 +370,7 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
     return new_grid
 
 
-def convert_grid_to_radolan_grid(dist: sRaster, grid: sGrid) -> np.ndarray:
+def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.ndarray:
     """
     Project each cell of the distance raster to the radolan grid. 
     Values where no distance is available are set to np.nan.
@@ -382,7 +385,13 @@ def convert_grid_to_radolan_grid(dist: sRaster, grid: sGrid) -> np.ndarray:
     Returns:
         np.ndarray: A grid of distance values in the radolan grid
     """
-    return convert_grid_to_radolan_grid_vectorized(dist, grid)
+
+    new_grid_list = []  
+    for dist_single, grid_single in zip(dist, grid):
+        new_grid = convert_grid_to_radolan_grid_vectorized(dist_single, grid_single)
+        new_grid_list.append(new_grid)
+
+    return np.stack(new_grid_list)
 
 
 def benchmark_conversion_methods(dist: sRaster, grid: sGrid) -> dict:
@@ -447,16 +456,16 @@ def benchmark_conversion_methods(dist: sRaster, grid: sGrid) -> dict:
     
     return benchmark_results
 
-
 def main():
     kluse_dis_wgs84 = (7.158556, 51.255604) 
     # compute_catchement_for_location(kluse_dis_wgs84, downsample_factor=50)
     dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50)
     
     # Benchmark both methods
-    benchmark_results = benchmark_conversion_methods(dist, grid)
+    # benchmark_results = benchmark_conversion_methods(dist, grid)
     
     new_grid = convert_grid_to_radolan_grid(dist, grid)
+    # new_grid = normalize_dist_map(new_grid)
 
     # save as np file
     np.save("dist_map_kluse.npy", new_grid)
@@ -467,5 +476,5 @@ if __name__ == "__main__":
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-    logging.warning("Install pysheds with `uv pip install git+https://github.com/yahah100/pysheds.git`")
+    logging.warning("Install custom pysheds tree with `uv pip install git+https://github.com/yahah100/pysheds.git`")
     main()
