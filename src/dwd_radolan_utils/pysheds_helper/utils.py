@@ -132,11 +132,10 @@ def load_dem(data_dir: Path) -> tuple[sRaster, sGrid]:
         for src in src_files_to_mosaic:
             src.close()
 
-    logging.info(f"Loading DEM from: {path}")
-    grid = sGrid.from_raster(path, data_name='elevation')
-    dem: sRaster = grid.read_raster(path, data_name='elevation')
-
     if not temp_path.exists():
+        logging.info(f"Loading DEM from: {path}")
+        grid = sGrid.from_raster(path, data_name='elevation')
+        dem: sRaster = grid.read_raster(path, data_name='elevation')
         logging.info(f"Saving grid to: {temp_path}")
         save_sgrid(grid, temp_path)
         save_raster(dem, temp_path)
