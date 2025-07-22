@@ -34,6 +34,7 @@ dependencies = [
     "scipy",
     "seaborn",
     "contextily",
+    "pytest",
     "pysheds @ git+https://github.com/yahah100/pysheds.git",
 ]
 
@@ -41,10 +42,17 @@ dependencies = [
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
     "black>=23.7.0",
     "pre-commit>=3.3.0",
+    "bandit[toml]>=1.7.0",
+    "safety>=2.3.0",
+    "coverage[toml]>=7.0",
+    "tox>=4.0.0",
+    "types-requests",
+    "types-setuptools",
 ]
 
 [project.scripts]
@@ -93,4 +101,10 @@ disallow_untyped_defs = true
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_functions = "test_*"
-addopts = "--cov=dwd_radolan_utils --cov-report=html --cov-report=term-missing"
+addopts = "-v"
+
+[dependency-groups]
+dev = [
+    "pyarrow>=21.0.0",
+    "pytest-cov>=6.2.1",
+]
