@@ -61,9 +61,7 @@ def turn_df_to_xarray(pd_dataframe: pd.DataFrame) -> xr.Dataset:
     return my_xarray
 
 
-def convert_radolan_to_wgs84(
-    x: np.ndarray, y: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
+def convert_radolan_to_wgs84(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Converts coordinates from the Radolan coordinate reference system (CRS) to the WGS84 CRS.
 
@@ -106,9 +104,7 @@ def get_wgs84_grid() -> np.ndarray:
     return wgs84_grid
 
 
-def cut_out_shapes(
-    x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int, max_dim_2: int
-) -> np.ndarray:
+def cut_out_shapes(x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int, max_dim_2: int) -> np.ndarray:
     """
     Cuts out shapes from a given array based on the specified dimensions.
 

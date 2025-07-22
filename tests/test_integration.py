@@ -42,9 +42,7 @@ class TestIntegrationExtractionAndGeoUtils:
         grid[0, 10:70, 10:70] = True  # Create a clear rectangular region
 
         # Test the integration
-        with patch(
-            "dwd_radolan_utils.extraction.compute_arg_min_max_dict"
-        ) as mock_compute_bounds:
+        with patch("dwd_radolan_utils.extraction.compute_arg_min_max_dict") as mock_compute_bounds:
             # Mock bounds that will work with our test data (80x80 to match created data)
             mock_compute_bounds.return_value = {
                 "min_x": 0,
@@ -53,9 +51,7 @@ class TestIntegrationExtractionAndGeoUtils:
                 "max_y": 80,
             }
 
-            ts_array, timestamps = extract_time_series_from_radar(
-                grid=grid, path=temp_directory, save=False
-            )
+            ts_array, timestamps = extract_time_series_from_radar(grid=grid, path=temp_directory, save=False)
 
             # Verify the integration worked
             assert isinstance(ts_array, np.ndarray)
@@ -75,9 +71,7 @@ class TestIntegrationDownloadAndExtraction:
         """Test that downloaded data can be properly extracted."""
         # Create sample data similar to what download would produce
         radar_data = np.random.rand(48, 100, 100) * 25  # 48 hours of data
-        time_list = [datetime(2024, 1, 1, h) for h in range(24)] + [
-            datetime(2024, 1, 2, h) for h in range(24)
-        ]
+        time_list = [datetime(2024, 1, 1, h) for h in range(24)] + [datetime(2024, 1, 2, h) for h in range(24)]
 
         # Use the save function from download module
         save_to_npz_files(radar_data, time_list, temp_directory)
@@ -86,9 +80,7 @@ class TestIntegrationDownloadAndExtraction:
         grid = np.ones((1, 100, 100), dtype=bool)  # 1 area, 100x100 to match radar data
 
         # Test that extraction can read the saved data
-        with patch(
-            "dwd_radolan_utils.extraction.compute_arg_min_max_dict"
-        ) as mock_compute_bounds:
+        with patch("dwd_radolan_utils.extraction.compute_arg_min_max_dict") as mock_compute_bounds:
             mock_compute_bounds.return_value = {
                 "min_x": 0,
                 "max_x": 100,
@@ -96,9 +88,7 @@ class TestIntegrationDownloadAndExtraction:
                 "max_y": 100,
             }
 
-            ts_array, timestamps = extract_time_series_from_radar(
-                grid=grid, path=temp_directory, save=False
-            )
+            ts_array, timestamps = extract_time_series_from_radar(grid=grid, path=temp_directory, save=False)
 
             # Verify successful integration
             assert len(timestamps) == 48  # Should read all time steps
@@ -115,9 +105,7 @@ class TestIntegrationFullWorkflow:
     @patch("dwd_radolan_utils.catchment_area.load_inflated_dem")
     @patch("dwd_radolan_utils.catchment_area.compute_accumulation")
     @patch("dwd_radolan_utils.catchment_area.compute_catchment_area")
-    def test_full_catchment_to_extraction_workflow(
-        self, mock_compute_catchment, mock_compute_acc, mock_load_dem, temp_directory
-    ):
+    def test_full_catchment_to_extraction_workflow(self, mock_compute_catchment, mock_compute_acc, mock_load_dem, temp_directory):
         """Test the complete workflow from catchment computation to time series extraction."""
         # Mock catchment area computation
         mock_dem = Mock()
@@ -139,9 +127,7 @@ class TestIntegrationFullWorkflow:
         )
 
         # Mock the grid conversion (this would normally be complex)
-        with patch(
-            "dwd_radolan_utils.catchment_area.convert_grid_to_radolan_grid"
-        ) as mock_convert:
+        with patch("dwd_radolan_utils.catchment_area.convert_grid_to_radolan_grid") as mock_convert:
             # Create a converted grid that mimics RADOLAN grid structure
             converted_grid = np.zeros((1, 900, 900))  # 1 catchment, RADOLAN dimensions
             # Add some realistic distance values in a small region
@@ -152,9 +138,7 @@ class TestIntegrationFullWorkflow:
             from dwd_radolan_utils.catchment_area import compute_catchement_for_location
 
             coordinates = (7.158556, 51.255604)  # Kluse station
-            dist, grid = compute_catchement_for_location(
-                coordinates, downsample_factor=50
-            )
+            dist, grid = compute_catchement_for_location(coordinates, downsample_factor=50)
 
             # Verify catchment computation worked
             assert dist is dist_grid  # Use identity comparison for mock objects
@@ -169,9 +153,7 @@ class TestIntegrationFullWorkflow:
             save_to_npz_files(radar_data, time_list, temp_directory)
 
             # Test extraction with the converted grid
-            with patch(
-                "dwd_radolan_utils.extraction.compute_arg_min_max_dict"
-            ) as mock_compute_bounds:
+            with patch("dwd_radolan_utils.extraction.compute_arg_min_max_dict") as mock_compute_bounds:
                 # Use bounds that match our test data
                 mock_compute_bounds.return_value = {
                     "min_x": 0,
@@ -183,9 +165,7 @@ class TestIntegrationFullWorkflow:
                 # Extract the grid for extraction (first catchment)
                 extraction_grid = converted_grid[0]
 
-                ts_array, timestamps = extract_time_series_from_radar(
-                    grid=extraction_grid, path=temp_directory, save=False
-                )
+                ts_array, timestamps = extract_time_series_from_radar(grid=extraction_grid, path=temp_directory, save=False)
 
                 # Verify the complete workflow
                 assert isinstance(ts_array, np.ndarray)
@@ -227,17 +207,13 @@ class TestIntegrationErrorHandling:
         invalid_grid = np.full((50, 50), np.nan)
 
         with pytest.raises(ValueError, match="All values in grid are NaN"):
-            extract_time_series_from_radar(
-                grid=invalid_grid, path=temp_directory, save=False
-            )
+            extract_time_series_from_radar(grid=invalid_grid, path=temp_directory, save=False)
 
     def test_file_format_consistency(self, temp_directory):
         """Test that saved files can be read consistently."""
         # Test CSV format
         ts_array = np.random.rand(24, 3)
-        timestamps = np.array(
-            [datetime(2024, 1, 1, h) for h in range(24)], dtype="datetime64"
-        )
+        timestamps = np.array([datetime(2024, 1, 1, h) for h in range(24)], dtype="datetime64")
 
         from dwd_radolan_utils.extraction import save_ts_array
 

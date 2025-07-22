@@ -10,9 +10,7 @@ from dwd_radolan_utils.geo_utils import get_wgs84_grid
 from dwd_radolan_utils.pysheds_helper.utils import convert_to_utm, load_dem, zoom_dem
 
 
-def load_inflated_dem(
-    data_dir=Path("data/dgm"), downsample_factor: int = 10
-) -> tuple[sRaster, sGrid]:
+def load_inflated_dem(data_dir=Path("data/dgm"), downsample_factor: int = 10) -> tuple[sRaster, sGrid]:
     """Load and process a DEM (Digital Elevation Model) by filling pits, depressions, and resolving flats.
 
     Args:
@@ -43,9 +41,7 @@ def load_inflated_dem(
     return inflated_dem, grid
 
 
-def compute_accumulation(
-    inflated_dem: sRaster, grid: sGrid, dirmap: tuple[int, ...]
-) -> tuple[sRaster, sRaster]:
+def compute_accumulation(inflated_dem: sRaster, grid: sGrid, dirmap: tuple[int, ...]) -> tuple[sRaster, sRaster]:
     """Compute flow directions and flow accumulation from a processed DEM.
 
     Args:
@@ -102,9 +98,7 @@ def compute_catchment_area(
     print(f"\nSnapped coordinates: x={x_snap}, y={y_snap}")
 
     # Delineate the catchment
-    catch = grid.catchment(
-        x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate"
-    )
+    catch = grid.catchment(x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate")
 
     print(f"Catchment shape: {catch.shape}")
     print(f"Catchment True values: {np.sum(catch)}")
@@ -113,16 +107,12 @@ def compute_catchment_area(
     grid.clip_to(catch)
     clipped_catch = grid.view(catch)
 
-    dist = grid.distance_to_outlet(
-        x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate"
-    )
+    dist = grid.distance_to_outlet(x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate")
     dist[dist == np.inf] = np.nan
     return clipped_catch, dist, (x_snap, y_snap)
 
 
-def compute_catchement_for_location(
-    coordinates: tuple[float, float], downsample_factor: int = 10
-) -> tuple[sRaster, sGrid]:
+def compute_catchement_for_location(coordinates: tuple[float, float], downsample_factor: int = 10) -> tuple[sRaster, sGrid]:
     """Compute the catchment area and distance to outlet for a given location.
 
     Args:
@@ -157,9 +147,7 @@ def compute_catchement_for_location(
     return dist, grid
 
 
-def compute_multiple_catchments(
-    coordinates: list[tuple[float, float]], downsample_factor: int = 50
-) -> tuple[list[sRaster], list[sGrid]]:
+def compute_multiple_catchments(coordinates: list[tuple[float, float]], downsample_factor: int = 50) -> tuple[list[sRaster], list[sGrid]]:
     """Compute the catchment area and distance to outlet for a list of locations.
 
     Args:
@@ -238,11 +226,7 @@ def convert_grid_to_radolan_grid_loops(dist: sRaster, grid: sGrid) -> np.ndarray
                     if 0 <= row < dist.shape[0] and 0 <= col < dist.shape[1]:
                         value = dist[row, col]
 
-                        if (
-                            not np.isnan(value)
-                            and hasattr(dist, "nodata")
-                            and value != dist.nodata
-                        ):
+                        if not np.isnan(value) and hasattr(dist, "nodata") and value != dist.nodata:
                             new_grid[i, j] = value
                             successful_projections += 1
                         elif not hasattr(dist, "nodata") and not np.isnan(value):
@@ -255,9 +239,7 @@ def convert_grid_to_radolan_grid_loops(dist: sRaster, grid: sGrid) -> np.ndarray
                     )
                     continue
 
-    logging.info(
-        f"Loop method: Successfully projected {successful_projections} out of {900 * 900} cells to RADOLAN grid"
-    )
+    logging.info(f"Loop method: Successfully projected {successful_projections} out of {900 * 900} cells to RADOLAN grid")
     return new_grid
 
 
@@ -299,12 +281,7 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
         y_min, y_max = float("-inf"), float("inf")
 
     # Vectorized bounds checking
-    within_bounds = (
-        (x_transformed >= x_min)
-        & (x_transformed <= x_max)
-        & (y_transformed >= y_min)
-        & (y_transformed <= y_max)
-    )
+    within_bounds = (x_transformed >= x_min) & (x_transformed <= x_max) & (y_transformed >= y_min) & (y_transformed <= y_max)
 
     # Convert coordinates to cell indices using the grid's affine transform
     try:
@@ -320,13 +297,9 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
             dy = (y_max - y_min) / dist.shape[0]
 
             col_indices = np.round((x_transformed - x_min) / dx).astype(int)
-            row_indices = np.round((y_max - y_transformed) / dy).astype(
-                int
-            )  # y is flipped
+            row_indices = np.round((y_max - y_transformed) / dy).astype(int)  # y is flipped
     except Exception as e:
-        logging.warning(
-            f"Could not use affine transform, falling back to manual conversion: {e}"
-        )
+        logging.warning(f"Could not use affine transform, falling back to manual conversion: {e}")
         # Fallback method
         dx = (x_max - x_min) / dist.shape[1] if dist.shape[1] > 0 else 1.0
         dy = (y_max - y_min) / dist.shape[0] if dist.shape[0] > 0 else 1.0
@@ -335,13 +308,7 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
         row_indices = np.round((y_max - y_transformed) / dy).astype(int)
 
     # Check if indices are within raster bounds
-    valid_indices = (
-        within_bounds
-        & (row_indices >= 0)
-        & (row_indices < dist.shape[0])
-        & (col_indices >= 0)
-        & (col_indices < dist.shape[1])
-    )
+    valid_indices = within_bounds & (row_indices >= 0) & (row_indices < dist.shape[0]) & (col_indices >= 0) & (col_indices < dist.shape[1])
 
     # Get the valid coordinates and indices
     valid_positions = np.where(valid_indices)[0]
@@ -356,9 +323,7 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
 
             # Check for nodata values
             if hasattr(dist, "nodata") and dist.nodata is not None:
-                valid_data_mask = ~np.isnan(sampled_values) & (
-                    sampled_values != dist.nodata
-                )
+                valid_data_mask = ~np.isnan(sampled_values) & (sampled_values != dist.nodata)
             else:
                 valid_data_mask = ~np.isnan(sampled_values)
 
@@ -369,14 +334,10 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
             # Assign valid values to the output grid
             new_grid[output_i, output_j] = sampled_values[valid_data_mask]
 
-            logging.info(
-                f"Vectorized method: Successfully projected {len(valid_final_positions)} out of {900 * 900} cells to RADOLAN grid"
-            )
+            logging.info(f"Vectorized method: Successfully projected {len(valid_final_positions)} out of {900 * 900} cells to RADOLAN grid")
 
         except Exception as e:
-            logging.warning(
-                f"Error during vectorized sampling, falling back to individual sampling: {e}"
-            )
+            logging.warning(f"Error during vectorized sampling, falling back to individual sampling: {e}")
             # If vectorized sampling fails, fall back to individual sampling for valid positions only
             for idx in valid_positions:
                 try:
@@ -384,14 +345,10 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
                     row, col = row_indices[idx], col_indices[idx]
                     value = dist[row, col]
 
-                    if not np.isnan(value) and (
-                        not hasattr(dist, "nodata") or value != dist.nodata
-                    ):
+                    if not np.isnan(value) and (not hasattr(dist, "nodata") or value != dist.nodata):
                         new_grid[i, j] = value
                 except Exception:
-                    logging.warning(
-                        f"Warning: Could not project cell {i}, {j} to radolan grid. Will be set to np.nan."
-                    )
+                    logging.warning(f"Warning: Could not project cell {i}, {j} to radolan grid. Will be set to np.nan.")
                     continue
     else:
         logging.warning("No valid coordinates found within the distance raster bounds")
@@ -436,11 +393,7 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-    logging.warning(
-        "Install custom pysheds tree with `uv pip install git+https://github.com/yahah100/pysheds.git`"
-    )
+    logging.warning("Install custom pysheds tree with `uv pip install git+https://github.com/yahah100/pysheds.git`")
     main()

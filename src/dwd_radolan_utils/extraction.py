@@ -53,14 +53,10 @@ def read_radar_data(
                 files.append(file)
 
     if len(files) == 0:
-        raise Exception(
-            f"No files found for the date range {start_date} to {end_date}. You may need to download more data first."
-        )
+        raise Exception(f"No files found for the date range {start_date} to {end_date}. You may need to download more data first.")
 
     # cut out shape, this can be done earlier to ensure faster loading speeds
-    logging.debug(
-        f"Found {len(files)} files for the date range {start_date} to {end_date}"
-    )
+    logging.debug(f"Found {len(files)} files for the date range {start_date} to {end_date}")
 
     len_array = 0
     time_data = []
@@ -142,9 +138,7 @@ def compute_arg_min_max_dict_nan(grid: np.ndarray) -> dict[str, int]:
     min_col = np.argmax(cols_with_data)
     max_col = len(cols_with_data) - np.argmax(cols_with_data[::-1])
 
-    logging.info(
-        f"Found non-NaN data boundaries: rows [{min_row}:{max_row}], cols [{min_col}:{max_col}]"
-    )
+    logging.info(f"Found non-NaN data boundaries: rows [{min_row}:{max_row}], cols [{min_col}:{max_col}]")
 
     return {
         "min_x": int(min_row),
@@ -190,9 +184,7 @@ def compute_arg_min_max_dict_bool(grid: np.ndarray) -> dict[str, int]:
     min_col = np.argmax(cols_with_data)
     max_col = len(cols_with_data) - np.argmax(cols_with_data[::-1])
 
-    logging.info(
-        f"Found True value boundaries in boolean grid: rows [{min_row}:{max_row}], cols [{min_col}:{max_col}]"
-    )
+    logging.info(f"Found True value boundaries in boolean grid: rows [{min_row}:{max_row}], cols [{min_col}:{max_col}]")
 
     return {
         "min_x": int(min_row),
@@ -220,15 +212,10 @@ def compute_arg_min_max_dict(grid: np.ndarray) -> dict[str, int]:
     """
     if np.any(np.isnan(grid)):
         return compute_arg_min_max_dict_nan(grid)
-    elif grid.dtype == bool or (
-        np.all(np.isin(grid, [0, 1]))
-        and grid.dtype in [np.int32, np.int64, np.uint8, np.float32, np.float64]
-    ):
+    elif grid.dtype == bool or (np.all(np.isin(grid, [0, 1])) and grid.dtype in [np.int32, np.int64, np.uint8, np.float32, np.float64]):
         return compute_arg_min_max_dict_bool(grid)
     else:
-        raise ValueError(
-            f"Grid has unsupported data type or values. Dtype: {grid.dtype}, unique values: {np.unique(grid)[:10]}"
-        )
+        raise ValueError(f"Grid has unsupported data type or values. Dtype: {grid.dtype}, unique values: {np.unique(grid)[:10]}")
 
 
 def aggregate_ts(
@@ -359,9 +346,7 @@ def save_ts_array(
     """
     if column_names is None:
         column_names = [f"ts_{i}" for i in range(ts_array.shape[1])]
-    logging.info(
-        f"Saving time series to {path} with column names: {column_names} and shape: {ts_array.shape}"
-    )
+    logging.info(f"Saving time series to {path} with column names: {column_names} and shape: {ts_array.shape}")
     df = pd.DataFrame(ts_array, index=timestamps, columns=column_names)
     df.index.name = index_name
     if file_format == "csv":

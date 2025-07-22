@@ -56,9 +56,7 @@ def plot_dem(dem: Raster, grid: Grid, downsample_factor: int = 4):
     plt.tight_layout()
 
 
-def plot_flow_direction(
-    fdir: Raster, grid: Grid, dirmap: tuple, downsample_factor: int = 1
-):
+def plot_flow_direction(fdir: Raster, grid: Grid, dirmap: tuple, downsample_factor: int = 1):
     """Plot flow direction grid showing water flow directions across the terrain.
 
     Args:
@@ -148,9 +146,7 @@ def plot_simple_distance_map(grid: Grid, dist: Raster):
     plt.title("Flow Distance", size=14)
 
 
-def plot_distance_catchment_area(
-    grid: Grid, dist: Raster, x_snap: float, y_snap: float, padding: int = 500
-):
+def plot_distance_catchment_area(grid: Grid, dist: Raster, x_snap: float, y_snap: float, padding: int = 500):
     """Plot detailed flow distance analysis with basemap and enhanced visualization.
 
     Creates a comprehensive visualization of flow distance to outlet with contextual basemap,
@@ -172,9 +168,7 @@ def plot_distance_catchment_area(
         "#8B0000",
     ]  # Green to red
     n_bins = 100
-    flow_cmap = LinearSegmentedColormap.from_list(
-        "flow_distance", colors_list, N=n_bins
-    )
+    flow_cmap = LinearSegmentedColormap.from_list("flow_distance", colors_list, N=n_bins)
 
     # Prepare flow distance data (remove infinite values)
     dist_plot = dist.copy()
@@ -205,9 +199,7 @@ def plot_distance_catchment_area(
     ax.set_xlim(x_min - padding, x_max + padding)
     ax.set_ylim(y_min - padding, y_max + padding)
 
-    print(
-        f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})"
-    )
+    print(f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})")
 
     # Add basemap with proper parameters
     try:
@@ -290,9 +282,7 @@ def plot_distance_catchment_area(
     cell_size = 5  # 5x downsampled from 1m DEM
     print("   🌍 Real distances (approx):")
     print(f"      Max flow path: {np.nanmax(dist_plot) * cell_size:.0f} meters")
-    print(
-        f"      Catchment area: {np.sum(~np.isnan(dist_plot)) * cell_size**2 / 10000:.1f} hectares"
-    )
+    print(f"      Catchment area: {np.sum(~np.isnan(dist_plot)) * cell_size**2 / 10000:.1f} hectares")
 
 
 def plot_flow_direction_with_basemap(
@@ -333,9 +323,7 @@ def plot_flow_direction_with_basemap(
     print(f"Flow direction data shape: {fdir_plot.shape}")
     print(f"Flow direction CRS: {grid_plot.crs}")
     print(f"Flow direction values range: {fdir_plot.min()} to {fdir_plot.max()}")
-    print(
-        f"Non-zero flow cells: {np.sum(fdir_plot != 0)} / {fdir_plot.size} ({100 * np.sum(fdir_plot != 0) / fdir_plot.size:.1f}%)"
-    )
+    print(f"Non-zero flow cells: {np.sum(fdir_plot != 0)} / {fdir_plot.size} ({100 * np.sum(fdir_plot != 0) / fdir_plot.size:.1f}%)")
 
     # Create the plot with better extent handling
     fig, ax = plt.subplots(figsize=(16, 12))
@@ -347,9 +335,7 @@ def plot_flow_direction_with_basemap(
     ax.set_xlim(x_min - padding, x_max + padding)
     ax.set_ylim(y_min - padding, y_max + padding)
 
-    print(
-        f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})"
-    )
+    print(f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})")
 
     # Add basemap with proper parameters
     try:
@@ -431,9 +417,7 @@ def plot_flow_direction_with_basemap(
 
     # Enhanced statistics
     print("\n📊 Flow Direction Statistics:")
-    print(
-        f"   🧭 Unique directions: {len(np.unique(fdir_plot[~np.isnan(fdir_plot)]))} different flow directions"
-    )
+    print(f"   🧭 Unique directions: {len(np.unique(fdir_plot[~np.isnan(fdir_plot)]))} different flow directions")
     print(f"   📦 Grid cells: {fdir_plot.size} total cells")
     print(f"   🗺️  Data extent: {data_extent}")
 

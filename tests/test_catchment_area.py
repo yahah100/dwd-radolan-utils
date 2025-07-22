@@ -26,9 +26,7 @@ class TestLoadInflatedDem:
 
     @patch("dwd_radolan_utils.catchment_area.load_dem")
     @patch("dwd_radolan_utils.catchment_area.zoom_dem")
-    def test_load_inflated_dem_basic(
-        self, mock_zoom, mock_load, mock_pysheds_raster, mock_pysheds_grid
-    ):
+    def test_load_inflated_dem_basic(self, mock_zoom, mock_load, mock_pysheds_raster, mock_pysheds_grid):
         """Test basic DEM loading and processing."""
         # Setup mocks
         mock_load.return_value = (mock_pysheds_raster, mock_pysheds_grid)
@@ -53,9 +51,7 @@ class TestLoadInflatedDem:
 
     @patch("dwd_radolan_utils.catchment_area.load_dem")
     @patch("dwd_radolan_utils.catchment_area.zoom_dem")
-    def test_load_inflated_dem_custom_path(
-        self, mock_zoom, mock_load, mock_pysheds_raster, mock_pysheds_grid
-    ):
+    def test_load_inflated_dem_custom_path(self, mock_zoom, mock_load, mock_pysheds_raster, mock_pysheds_grid):
         """Test DEM loading with custom data directory."""
         mock_load.return_value = (mock_pysheds_raster, mock_pysheds_grid)
         mock_zoom.return_value = (mock_pysheds_raster, mock_pysheds_grid)
@@ -70,9 +66,7 @@ class TestLoadInflatedDem:
 
         # Verify the custom path was passed to load_dem
         mock_load.assert_called_once_with(custom_path)
-        mock_zoom.assert_called_once_with(
-            mock_pysheds_raster, mock_pysheds_grid, downsample_factor=5
-        )
+        mock_zoom.assert_called_once_with(mock_pysheds_raster, mock_pysheds_grid, downsample_factor=5)
 
 
 class TestComputeAccumulation:
@@ -91,17 +85,13 @@ class TestComputeAccumulation:
         acc, fdir = compute_accumulation(mock_pysheds_raster, mock_pysheds_grid, dirmap)
 
         # Verify calls
-        mock_pysheds_grid.flowdir.assert_called_once_with(
-            mock_pysheds_raster, dirmap=dirmap
-        )
+        mock_pysheds_grid.flowdir.assert_called_once_with(mock_pysheds_raster, dirmap=dirmap)
         mock_pysheds_grid.accumulation.assert_called_once_with(mock_fdir, dirmap=dirmap)
 
         assert acc == mock_acc
         assert fdir == mock_fdir
 
-    def test_compute_accumulation_custom_dirmap(
-        self, mock_pysheds_raster, mock_pysheds_grid
-    ):
+    def test_compute_accumulation_custom_dirmap(self, mock_pysheds_raster, mock_pysheds_grid):
         """Test accumulation with custom direction mapping."""
         custom_dirmap = (1, 2, 4, 8, 16, 32, 64, 128)  # Different order
 
@@ -113,21 +103,15 @@ class TestComputeAccumulation:
         compute_accumulation(mock_pysheds_raster, mock_pysheds_grid, custom_dirmap)
 
         # Verify the custom dirmap was used
-        mock_pysheds_grid.flowdir.assert_called_once_with(
-            mock_pysheds_raster, dirmap=custom_dirmap
-        )
-        mock_pysheds_grid.accumulation.assert_called_once_with(
-            mock_fdir, dirmap=custom_dirmap
-        )
+        mock_pysheds_grid.flowdir.assert_called_once_with(mock_pysheds_raster, dirmap=custom_dirmap)
+        mock_pysheds_grid.accumulation.assert_called_once_with(mock_fdir, dirmap=custom_dirmap)
 
 
 class TestComputeCatchmentArea:
     """Test cases for compute_catchment_area function."""
 
     @patch("dwd_radolan_utils.catchment_area.convert_to_utm")
-    def test_compute_catchment_area_basic(
-        self, mock_convert_utm, mock_pysheds_raster, mock_pysheds_grid
-    ):
+    def test_compute_catchment_area_basic(self, mock_convert_utm, mock_pysheds_raster, mock_pysheds_grid):
         """Test basic catchment area computation."""
         # Setup mocks
         mock_convert_utm.return_value = (450000, 5650000)  # UTM coordinates
@@ -166,9 +150,7 @@ class TestComputeCatchmentArea:
         assert clipped_catch is not None
         assert dist is not None
 
-    def test_compute_catchment_area_coordinate_types(
-        self, mock_pysheds_raster, mock_pysheds_grid
-    ):
+    def test_compute_catchment_area_coordinate_types(self, mock_pysheds_raster, mock_pysheds_grid):
         """Test that coordinate types are handled correctly."""
         dirmap = (64, 128, 1, 2, 4, 8, 16, 32)
         coordinates = (7.158556, 51.255604)
@@ -201,9 +183,7 @@ class TestComputeCatchmentForLocation:
     @patch("dwd_radolan_utils.catchment_area.load_inflated_dem")
     @patch("dwd_radolan_utils.catchment_area.compute_accumulation")
     @patch("dwd_radolan_utils.catchment_area.compute_catchment_area")
-    def test_compute_catchement_for_location_basic(
-        self, mock_compute_catchment, mock_compute_acc, mock_load_dem
-    ):
+    def test_compute_catchement_for_location_basic(self, mock_compute_catchment, mock_compute_acc, mock_load_dem):
         """Test catchment computation for a single location."""
         coordinates = (7.158556, 51.255604)
 
@@ -225,9 +205,7 @@ class TestComputeCatchmentForLocation:
             mock_snap_coords,
         )
 
-        result_dist, result_grid = compute_catchement_for_location(
-            coordinates, downsample_factor=20
-        )
+        result_dist, result_grid = compute_catchement_for_location(coordinates, downsample_factor=20)
 
         # Verify calls
         mock_load_dem.assert_called_once_with(downsample_factor=20)
@@ -250,13 +228,9 @@ class TestComputeMultipleCatchments:
         # Mock return values for each location
         mock_dists = [Mock(), Mock(), Mock()]
         mock_grids = [Mock(), Mock(), Mock()]
-        mock_compute_single.side_effect = list(
-            zip(mock_dists, mock_grids, strict=False)
-        )
+        mock_compute_single.side_effect = list(zip(mock_dists, mock_grids, strict=False))
 
-        dist_list, grid_list = compute_multiple_catchments(
-            coordinates, downsample_factor=25
-        )
+        dist_list, grid_list = compute_multiple_catchments(coordinates, downsample_factor=25)
 
         # Verify calls
         assert mock_compute_single.call_count == 3
@@ -309,9 +283,7 @@ class TestConvertGridToRadolanGrid:
         mock_pysheds_raster.shape = (100, 100)
         mock_pysheds_raster.nodata = -9999
 
-        result = convert_grid_to_radolan_grid_vectorized(
-            mock_pysheds_raster, mock_pysheds_grid
-        )
+        result = convert_grid_to_radolan_grid_vectorized(mock_pysheds_raster, mock_pysheds_grid)
 
         # Check result shape
         assert result.shape == (900, 900)
@@ -346,25 +318,19 @@ class TestConvertGridToRadolanGrid:
 
         mock_pysheds_grid.nearest_cell.return_value = (50, 50)
 
-        result = convert_grid_to_radolan_grid_loops(
-            mock_pysheds_raster, mock_pysheds_grid
-        )
+        result = convert_grid_to_radolan_grid_loops(mock_pysheds_raster, mock_pysheds_grid)
 
         # Check result shape
         assert result.shape == (900, 900)
         assert isinstance(result, np.ndarray)
 
-    def test_convert_grid_to_radolan_grid_multiple(
-        self, mock_pysheds_raster, mock_pysheds_grid
-    ):
+    def test_convert_grid_to_radolan_grid_multiple(self, mock_pysheds_raster, mock_pysheds_grid):
         """Test conversion of multiple grids."""
         # Create list inputs
         dist_list = [mock_pysheds_raster, mock_pysheds_raster]
         grid_list = [mock_pysheds_grid, mock_pysheds_grid]
 
-        with patch(
-            "dwd_radolan_utils.catchment_area.convert_grid_to_radolan_grid_vectorized"
-        ) as mock_vectorized:
+        with patch("dwd_radolan_utils.catchment_area.convert_grid_to_radolan_grid_vectorized") as mock_vectorized:
             # Mock return values
             mock_vectorized.return_value = np.random.rand(900, 900)
 
@@ -403,9 +369,7 @@ class TestConversionMethods:
 
         with (
             patch("dwd_radolan_utils.catchment_area.get_wgs84_grid") as mock_get_wgs84,
-            patch(
-                "dwd_radolan_utils.catchment_area.Transformer"
-            ) as mock_transformer_class,
+            patch("dwd_radolan_utils.catchment_area.Transformer") as mock_transformer_class,
         ):
             # Setup mocks for coordinate transformation
             wgs84_grid = np.random.rand(900, 900, 2)
@@ -415,27 +379,21 @@ class TestConversionMethods:
 
             mock_transformer = Mock()
             mock_transformer.transform.return_value = (
-                np.random.rand(900 * 900) * 100000
-                + 400000,  # x coordinates within bounds
-                np.random.rand(900 * 900) * 100000
-                + 5600000,  # y coordinates within bounds
+                np.random.rand(900 * 900) * 100000 + 400000,  # x coordinates within bounds
+                np.random.rand(900 * 900) * 100000 + 5600000,  # y coordinates within bounds
             )
             mock_transformer_class.from_crs.return_value = mock_transformer
 
             # Test vectorized method
             logging.info("Testing vectorized method...")
             start_time = time.time()
-            result_vectorized = convert_grid_to_radolan_grid_vectorized(
-                mock_pysheds_raster, mock_pysheds_grid
-            )
+            result_vectorized = convert_grid_to_radolan_grid_vectorized(mock_pysheds_raster, mock_pysheds_grid)
             vectorized_time = time.time() - start_time
 
             # Test loop method
             logging.info("Testing loop method...")
             start_time = time.time()
-            result_loops = convert_grid_to_radolan_grid_loops(
-                mock_pysheds_raster, mock_pysheds_grid
-            )
+            result_loops = convert_grid_to_radolan_grid_loops(mock_pysheds_raster, mock_pysheds_grid)
             loops_time = time.time() - start_time
 
             # Compare results
@@ -444,14 +402,10 @@ class TestConversionMethods:
 
             # Check if results are approximately equal (within tolerance)
             tolerance = 1e-6
-            close_match = np.allclose(
-                result_vectorized, result_loops, equal_nan=True, rtol=tolerance
-            )
+            close_match = np.allclose(result_vectorized, result_loops, equal_nan=True, rtol=tolerance)
 
             # Calculate speedup
-            speedup = (
-                loops_time / vectorized_time if vectorized_time > 0 else float("inf")
-            )
+            speedup = loops_time / vectorized_time if vectorized_time > 0 else float("inf")
 
             benchmark_results = {
                 "vectorized_time": vectorized_time,
@@ -470,13 +424,9 @@ class TestConversionMethods:
             logging.info(f"Vectorized method time: {vectorized_time:.3f} seconds")
             logging.info(f"Loop method time:       {loops_time:.3f} seconds")
             logging.info(f"Speedup:               {speedup:.1f}x faster")
-            logging.info(
-                f"Valid cells (vectorized): {valid_vectorized:,} / {900 * 900:,}"
-            )
+            logging.info(f"Valid cells (vectorized): {valid_vectorized:,} / {900 * 900:,}")
             logging.info(f"Valid cells (loops):      {valid_loops:,} / {900 * 900:,}")
-            logging.info(
-                f"Results match:         {'✅ Yes' if close_match else '❌ No'}"
-            )
+            logging.info(f"Results match:         {'✅ Yes' if close_match else '❌ No'}")
             logging.info("=" * 60)
 
             # Assertions for test validation

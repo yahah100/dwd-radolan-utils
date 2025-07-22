@@ -354,9 +354,7 @@ class TestDownloadDwd:
     @patch("dwd_radolan_utils.download.list_dwd_files_for_var")
     @patch("dwd_radolan_utils.download.download_radolan_data")
     @patch("dwd_radolan_utils.download.save_to_npz_files")
-    def test_download_dwd_recent_single_month(
-        self, mock_save, mock_download, mock_list, temp_directory
-    ):
+    def test_download_dwd_recent_single_month(self, mock_save, mock_download, mock_list, temp_directory):
         """Test downloading recent data for single month."""
         # Setup mocks
         mock_list.return_value = ["file1.gz", "file2.gz"]
@@ -395,9 +393,7 @@ class TestDownloadOneMonth:
     @patch("dwd_radolan_utils.download.list_dwd_files_for_var")
     @patch("dwd_radolan_utils.download.download_radolan_data")
     @patch("dwd_radolan_utils.download.save_to_npz_files")
-    def test_download_one_month_recent(
-        self, mock_save, mock_download, mock_list, temp_directory
-    ):
+    def test_download_one_month_recent(self, mock_save, mock_download, mock_list, temp_directory):
         """Test downloading one month of recent data."""
         # Setup mocks
         mock_list.return_value = ["file1.gz", "file2.gz"]
@@ -419,9 +415,7 @@ class TestDownloadOneMonth:
     @patch("dwd_radolan_utils.download.list_dwd_files_for_var")
     @patch("dwd_radolan_utils.download.download_historical_radolan_data")
     @patch("dwd_radolan_utils.download.save_to_npz_files")
-    def test_download_one_month_historical(
-        self, mock_save, mock_download_hist, mock_list, temp_directory
-    ):
+    def test_download_one_month_historical(self, mock_save, mock_download_hist, mock_list, temp_directory):
         """Test downloading one month of historical data."""
         # Setup mocks
         mock_list.return_value = ["RW202401.tar.gz"]
@@ -454,9 +448,7 @@ class TestDownloadOneMonth:
 
     @patch("dwd_radolan_utils.download.list_dwd_files_for_var")
     @patch("dwd_radolan_utils.download.download_historical_radolan_data")
-    def test_download_one_month_multiple_files(
-        self, mock_download_hist, mock_list, temp_directory
-    ):
+    def test_download_one_month_multiple_files(self, mock_download_hist, mock_list, temp_directory):
         """Test handling when multiple files are found for historical data."""
         mock_list.return_value = ["RW202401.tar.gz", "RW202401_alt.tar.gz"]
 

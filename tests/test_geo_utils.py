@@ -167,9 +167,7 @@ class TestGetWgs84Grid:
 
     def test_get_wgs84_grid_coordinate_ranges(self):
         """Test that coordinate conversion is called with correct ranges."""
-        with patch(
-            "dwd_radolan_utils.geo_utils.convert_radolan_to_wgs84"
-        ) as mock_convert:
+        with patch("dwd_radolan_utils.geo_utils.convert_radolan_to_wgs84") as mock_convert:
             # Mock return values
             mock_convert.return_value = (np.arange(900), np.arange(900))
 
@@ -196,9 +194,7 @@ class TestCutOutShapes:
         array = np.arange(100).reshape(10, 10)
 
         # Cut out a sub-region
-        result = cut_out_shapes(
-            x=array, min_dim_1=2, max_dim_1=8, min_dim_2=3, max_dim_2=7
-        )
+        result = cut_out_shapes(x=array, min_dim_1=2, max_dim_1=8, min_dim_2=3, max_dim_2=7)
 
         # Check shape
         assert result.shape == (6, 4)  # (8-2, 7-3)
@@ -213,9 +209,7 @@ class TestCutOutShapes:
         array = np.arange(1000).reshape(10, 10, 10)
 
         # Cut out a sub-region
-        result = cut_out_shapes(
-            x=array, min_dim_1=1, max_dim_1=9, min_dim_2=2, max_dim_2=8
-        )
+        result = cut_out_shapes(x=array, min_dim_1=1, max_dim_1=9, min_dim_2=2, max_dim_2=8)
 
         # Check shape
         assert result.shape == (10, 8, 6)  # (10, 9-1, 8-2)
@@ -228,9 +222,7 @@ class TestCutOutShapes:
         """Test cutting with full range (no actual cutting)."""
         array = np.arange(100).reshape(10, 10)
 
-        result = cut_out_shapes(
-            x=array, min_dim_1=0, max_dim_1=10, min_dim_2=0, max_dim_2=10
-        )
+        result = cut_out_shapes(x=array, min_dim_1=0, max_dim_1=10, min_dim_2=0, max_dim_2=10)
 
         # Should be identical to original
         np.testing.assert_array_equal(result, array)
@@ -240,16 +232,12 @@ class TestCutOutShapes:
         array = np.arange(100).reshape(10, 10)
 
         # Single row/column
-        result = cut_out_shapes(
-            x=array, min_dim_1=5, max_dim_1=6, min_dim_2=3, max_dim_2=7
-        )
+        result = cut_out_shapes(x=array, min_dim_1=5, max_dim_1=6, min_dim_2=3, max_dim_2=7)
 
         assert result.shape == (1, 4)
 
         # Single element
-        result = cut_out_shapes(
-            x=array, min_dim_1=5, max_dim_1=6, min_dim_2=3, max_dim_2=4
-        )
+        result = cut_out_shapes(x=array, min_dim_1=5, max_dim_1=6, min_dim_2=3, max_dim_2=4)
 
         assert result.shape == (1, 1)
 
@@ -257,21 +245,15 @@ class TestCutOutShapes:
         """Test error handling for invalid dimensions."""
         array = np.arange(100)  # 1D array
 
-        with pytest.raises(
-            ValueError, match="Input array must have either 2 or 3 dimensions"
-        ):
-            cut_out_shapes(
-                x=array, min_dim_1=0, max_dim_1=10, min_dim_2=0, max_dim_2=10
-            )
+        with pytest.raises(ValueError, match="Input array must have either 2 or 3 dimensions"):
+            cut_out_shapes(x=array, min_dim_1=0, max_dim_1=10, min_dim_2=0, max_dim_2=10)
 
     def test_cut_out_shapes_boundary_validation(self):
         """Test that boundaries work correctly."""
         array = np.random.rand(20, 30, 40)
 
         # Test various boundary combinations
-        result = cut_out_shapes(
-            x=array, min_dim_1=5, max_dim_1=15, min_dim_2=10, max_dim_2=25
-        )
+        result = cut_out_shapes(x=array, min_dim_1=5, max_dim_1=15, min_dim_2=10, max_dim_2=25)
 
         assert result.shape == (20, 10, 15)  # (original_dim_0, 15-5, 25-10)
 
