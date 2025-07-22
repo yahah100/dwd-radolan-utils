@@ -180,6 +180,29 @@ class TestAggregateTs:
         assert isinstance(result, np.ndarray)
         assert result.shape == (sample_radar_data.shape[0],)
 
+    def test_aggregate_ts_mean_specific_case(self):
+        """Test time series aggregation with specific mean case."""
+        radolan_grid = np.ones((3, 3, 3), dtype=np.float64)
+        radolan_grid[0] = 0
+
+        grid = np.array([[1, 1, 1], [1, 1, 0], [1, 0, 0]])
+
+        result_1 = aggregate_ts(grid, radolan_grid, "mean")
+        expected_result = np.array([0.0, 2/3, 2/3])
+        assert result_1.shape == (3,)
+        assert np.allclose(result_1, expected_result), f"Result {result_1} is not equal to expected result {expected_result}"
+
+    def test_aggregate_ts_sum_with_nan(self):
+        """Test time series aggregation with sum method and NaN values."""
+        radolan_grid = np.ones((3, 3, 3), dtype=np.float64)
+        radolan_grid[0] = 0
+
+        grid_2 = np.array([[0.1, 0.2, np.nan], [0.4, 0.5, np.nan], [np.nan, np.nan, np.nan]], dtype=np.float32)
+
+        result_2 = aggregate_ts(grid_2, radolan_grid, "sum")
+        assert result_2.shape == (3,)
+        assert np.allclose(result_2, np.array([0.0, 1.2, 1.2]))
+
 
 class TestExtractTimeSeriesFromRadar:
     """Test cases for extract_time_series_from_radar function."""
