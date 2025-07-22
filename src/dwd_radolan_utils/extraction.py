@@ -234,6 +234,12 @@ def aggregate_ts(
     Returns:
         np.ndarray: The aggregated time series of shape (t,)
     """
+
+    assert grid.ndim == 2, "Grid must be 2D"
+    assert radar_grid.ndim == 3, "Radar grid must be 3D"
+    assert grid.shape[0] == radar_grid.shape[1], "Grid and radar grid must have the same number of rows"
+    assert grid.shape[1] == radar_grid.shape[2], "Grid and radar grid must have the same number of columns"
+
     if grid.dtype == bool:
         grid = grid.astype(int)
 
