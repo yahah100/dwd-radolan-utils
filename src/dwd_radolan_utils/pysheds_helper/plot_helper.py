@@ -1,3 +1,5 @@
+from pathlib import Path
+import logging
 import contextily as ctx
 import numpy as np
 import seaborn as sns
@@ -40,7 +42,7 @@ def plot_dem(dem: Raster, grid: Grid, downsample_factor: int = 4):
         grid: Pysheds grid object containing spatial reference information
         downsample_factor: Factor by which to downsample the DEM for faster plotting (default: 4)
     """
-    dem_zoom, grid_zoom = zoom_dem(dem, downsample_factor)
+    dem_zoom, grid_zoom = zoom_dem(dem, grid, downsample_factor)
 
     dem_zoom[dem_zoom < -100] = np.nan
 
@@ -66,7 +68,7 @@ def plot_flow_direction(fdir: Raster, grid: Grid, dirmap: tuple, downsample_fact
         downsample_factor: Factor by which to downsample the data for plotting (default: 1)
     """
     if downsample_factor > 1:
-        fdir_zoom, _ = zoom_dem(fdir, downsample_factor)
+        fdir_zoom, _ = zoom_dem(fdir, grid, downsample_factor)
     else:
         fdir_zoom = fdir
 
@@ -179,15 +181,15 @@ def plot_distance_catchment_area(grid: Grid, dist: Raster, x_snap: float, y_snap
     if hasattr(dist, "extent"):
         data_extent = dist.extent
         data_crs = dist.crs if hasattr(dist, "crs") else grid.crs
-        print(f"Using distance data extent: {data_extent}")
+        logging.info(f"Using distance data extent: {data_extent}")
     else:
         data_extent = grid.extent
         data_crs = grid.crs
-        print(f"Using grid extent: {data_extent}")
+        logging.info(f"Using grid extent: {data_extent}")
 
-    print(f"Distance data shape: {dist_plot.shape}")
-    print(f"Distance data CRS: {data_crs}")
-    print(f"Pour point: ({x_snap}, {y_snap})")
+    logging.info(f"Distance data shape: {dist_plot.shape}")
+    logging.info(f"Distance data CRS: {data_crs}")
+    logging.info(f"Pour point: ({x_snap}, {y_snap})")
 
     # Create the plot with better extent handling
     fig, ax = plt.subplots(figsize=(16, 12))
@@ -199,7 +201,7 @@ def plot_distance_catchment_area(grid: Grid, dist: Raster, x_snap: float, y_snap
     ax.set_xlim(x_min - padding, x_max + padding)
     ax.set_ylim(y_min - padding, y_max + padding)
 
-    print(f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})")
+    logging.info(f"Plot extent with padding: X({x_min - padding:.0f}, {x_max + padding:.0f}), Y({y_min - padding:.0f}, {y_max + padding:.0f})")
 
     # Add basemap with proper parameters
     try:
@@ -209,9 +211,9 @@ def plot_distance_catchment_area(grid: Grid, dist: Raster, x_snap: float, y_snap
             zoom="auto",  # Auto zoom level
             attribution_size=8,
         )
-        print("✅ Basemap loaded successfully")
+        logging.info("✅ Basemap loaded successfully")
     except Exception as e:
-        print(f"⚠️ Could not load basemap: {e}")
+        logging.error(f"⚠️ Could not load basemap: {e}")
         # Add a simple background color if basemap fails
         ax.set_facecolor("#f0f0f0")
 
@@ -267,22 +269,25 @@ def plot_distance_catchment_area(grid: Grid, dist: Raster, x_snap: float, y_snap
     ax.set_aspect("equal")
 
     plt.tight_layout()
-    plt.show()
+    plot_path = Path(".plot/dist_map_kluse.png")
+    plot_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(plot_path)
+    plt.close()
 
     # Enhanced statistics
-    print("\n📊 Enhanced Flow Distance Statistics:")
-    print(f"   🎯 Pour Point: ({x_snap:.0f}, {y_snap:.0f}) UTM")
-    print(f"   📏 Min distance: {np.nanmin(dist_plot):.1f} cells")
-    print(f"   📏 Max distance: {np.nanmax(dist_plot):.1f} cells")
-    print(f"   📊 Mean distance: {np.nanmean(dist_plot):.1f} cells")
-    print(f"   📦 Catchment area: {np.sum(~np.isnan(dist_plot))} cells")
-    print(f"   🗺️  Data extent: {data_extent}")
+    logging.info("\n📊 Enhanced Flow Distance Statistics:")
+    logging.info(f"   🎯 Pour Point: ({x_snap:.0f}, {y_snap:.0f}) UTM")
+    logging.info(f"   📏 Min distance: {np.nanmin(dist_plot):.1f} cells")
+    logging.info(f"   📏 Max distance: {np.nanmax(dist_plot):.1f} cells")
+    logging.info(f"   📊 Mean distance: {np.nanmean(dist_plot):.1f} cells")
+    logging.info(f"   📦 Catchment area: {np.sum(~np.isnan(dist_plot))} cells")
+    logging.info(f"   🗺️  Data extent: {data_extent}")
 
     # Convert to real-world units (each cell represents downsample_factor meters)
     cell_size = 5  # 5x downsampled from 1m DEM
-    print("   🌍 Real distances (approx):")
-    print(f"      Max flow path: {np.nanmax(dist_plot) * cell_size:.0f} meters")
-    print(f"      Catchment area: {np.sum(~np.isnan(dist_plot)) * cell_size**2 / 10000:.1f} hectares")
+    logging.info("   🌍 Real distances (approx):")
+    logging.info(f"      Max flow path: {np.nanmax(dist_plot) * cell_size:.0f} meters")
+    logging.info(f"      Catchment area: {np.sum(~np.isnan(dist_plot)) * cell_size**2 / 10000:.1f} hectares")
 
 
 def plot_flow_direction_with_basemap(
@@ -306,7 +311,7 @@ def plot_flow_direction_with_basemap(
     """
     # Apply downsampling if requested
     if downsample_factor > 1:
-        fdir_plot, grid_plot = zoom_dem(fdir, downsample_factor)
+        fdir_plot, grid_plot = zoom_dem(fdir, grid, downsample_factor)
     else:
         fdir_plot = fdir
         grid_plot = grid
