@@ -210,6 +210,7 @@ def compute_arg_min_max_dict(grid: np.ndarray) -> dict[str, int]:
             - min_y: minimum column index with valid data
             - max_y: maximum column index with valid data
     """
+    logging.info(f"Computing min/max dict for grid with shape: {grid.shape}")
     if np.any(np.isnan(grid)):
         return compute_arg_min_max_dict_nan(grid)
     elif grid.dtype == bool or (np.all(np.isin(grid, [0, 1])) and grid.dtype in [np.int32, np.int64, np.uint8, np.float32, np.float64]):
