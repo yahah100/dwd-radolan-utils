@@ -184,6 +184,119 @@ class TestGetWgs84Grid:
             assert len(x_coords) == 900
             assert len(y_coords) == 900
 
+    def test_get_wgs84_grid_orientation_latitude(self):
+        """Test that latitude increases from south to north (bottom to top of array)."""
+        grid = get_wgs84_grid()
+        
+        # Extract latitude values (first element of last dimension)
+        lats = grid[:, :, 0]
+        
+        # Check that latitude increases from bottom to top (south to north)
+        # Bottom row should have lower latitude than top row
+        bottom_lat = lats[-1, 450]  # Middle of bottom row
+        top_lat = lats[0, 450]      # Middle of top row
+        
+        assert bottom_lat < top_lat, f"Latitude should increase from south to north. Bottom: {bottom_lat}, Top: {top_lat}"
+        
+        # Check that latitude generally increases going up
+        # Sample a few points along a column
+        sample_indices = [800, 600, 400, 200, 50]  # From bottom to top
+        sample_lats = [lats[i, 450] for i in sample_indices]
+        
+        # Each latitude should be higher than the previous (going north)
+        for i in range(1, len(sample_lats)):
+            assert sample_lats[i] > sample_lats[i-1], f"Latitude should increase going north. Index {sample_indices[i-1]}: {sample_lats[i-1]}, Index {sample_indices[i]}: {sample_lats[i]}"
+
+    def test_get_wgs84_grid_orientation_longitude(self):
+        """Test that longitude increases from west to east (left to right of array)."""
+        grid = get_wgs84_grid()
+        
+        # Extract longitude values (second element of last dimension)
+        lons = grid[:, :, 1]
+        
+        # Check that longitude increases from left to right (west to east)
+        # Left column should have lower longitude than right column
+        left_lon = lons[450, 0]    # Middle of left column
+        right_lon = lons[450, -1]  # Middle of right column
+        
+        assert left_lon < right_lon, f"Longitude should increase from west to east. Left: {left_lon}, Right: {right_lon}"
+        
+        # Check that longitude generally increases going right
+        # Sample a few points along a row
+        sample_indices = [50, 200, 400, 600, 850]  # From left to right
+        sample_lons = [lons[450, i] for i in sample_indices]
+        
+        # Each longitude should be higher than the previous (going east)
+        for i in range(1, len(sample_lons)):
+            assert sample_lons[i] > sample_lons[i-1], f"Longitude should increase going east. Index {sample_indices[i-1]}: {sample_lons[i-1]}, Index {sample_indices[i]}: {sample_lons[i]}"
+
+    def test_get_wgs84_grid_corner_coordinates(self):
+        """Test that corner coordinates are reasonable for Germany's coverage."""
+        grid = get_wgs84_grid()
+        
+        # Extract corner coordinates
+        # Note: Grid orientation should be [latitude, longitude]
+        southwest_corner = grid[-1, 0, :]    # Bottom-left: [lat, lon]
+        southeast_corner = grid[-1, -1, :]   # Bottom-right: [lat, lon]
+        northwest_corner = grid[0, 0, :]     # Top-left: [lat, lon]
+        northeast_corner = grid[0, -1, :]    # Top-right: [lat, lon]
+        
+        # Germany approximately covers:
+        # Latitude: 47°N to 55°N
+        # Longitude: 5°E to 15°E
+        # But Radolan grid extends beyond Germany borders
+        
+        # Test coordinate ranges (allowing some buffer beyond Germany)
+        assert 45.0 <= southwest_corner[0] <= 50.0, f"SW latitude should be reasonable: {southwest_corner[0]}"
+        assert 52.0 <= northwest_corner[0] <= 57.0, f"NW latitude should be reasonable: {northwest_corner[0]}"
+        assert 45.0 <= southeast_corner[0] <= 50.0, f"SE latitude should be reasonable: {southeast_corner[0]}"
+        assert 52.0 <= northeast_corner[0] <= 57.0, f"NE latitude should be reasonable: {northeast_corner[0]}"
+        
+        assert 3.0 <= southwest_corner[1] <= 8.0, f"SW longitude should be reasonable: {southwest_corner[1]}"
+        assert 3.0 <= northwest_corner[1] <= 8.0, f"NW longitude should be reasonable: {northwest_corner[1]}"
+        assert 13.0 <= southeast_corner[1] <= 18.0, f"SE longitude should be reasonable: {southeast_corner[1]}"
+        assert 13.0 <= northeast_corner[1] <= 18.0, f"NE longitude should be reasonable: {northeast_corner[1]}"
+        
+        # Test corner relationships
+        assert northwest_corner[0] > southwest_corner[0], "North should be higher latitude than south"
+        assert northeast_corner[0] > southeast_corner[0], "North should be higher latitude than south"
+        assert southeast_corner[1] > southwest_corner[1], "East should be higher longitude than west"
+        assert northeast_corner[1] > northwest_corner[1], "East should be higher longitude than west"
+
+    def test_get_wgs84_grid_monotonic_increase(self):
+        """Test that coordinates increase monotonically in both directions."""
+        grid = get_wgs84_grid()
+        
+        # Test monotonic increase in latitude (north direction)
+        # Pick a column and check that latitude increases going up (decreasing row index)
+        middle_col = 450
+        lat_column = grid[:, middle_col, 0]
+        
+        # Since array index 0 is north and 899 is south, latitude should decrease with increasing index
+        for i in range(len(lat_column) - 1):
+            assert lat_column[i] >= lat_column[i + 1], f"Latitude should decrease with increasing row index. Row {i}: {lat_column[i]}, Row {i+1}: {lat_column[i+1]}"
+        
+        # Test monotonic increase in longitude (east direction)
+        # Pick a row and check that longitude increases going right
+        middle_row = 450
+        lon_row = grid[middle_row, :, 1]
+        
+        for i in range(len(lon_row) - 1):
+            assert lon_row[i] <= lon_row[i + 1], f"Longitude should increase with increasing column index. Col {i}: {lon_row[i]}, Col {i+1}: {lon_row[i+1]}"
+
+    def test_get_wgs84_grid_center_coordinate(self):
+        """Test that the center coordinate is reasonable for Germany."""
+        grid = get_wgs84_grid()
+        
+        # Get center coordinate
+        center_lat = grid[450, 450, 0]
+        center_lon = grid[450, 450, 1]
+        
+        # Center of Germany is approximately 51°N, 10°E
+        # Allow some tolerance since Radolan grid may not be perfectly centered on Germany
+        assert 49.0 <= center_lat <= 53.0, f"Center latitude should be reasonable for Germany: {center_lat}"
+        assert 8.0 <= center_lon <= 12.0, f"Center longitude should be reasonable for Germany: {center_lon}"
+
 
 class TestCutOutShapes:
     """Test cases for cut_out_shapes function."""

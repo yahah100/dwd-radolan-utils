@@ -95,7 +95,6 @@ def get_wgs84_grid() -> np.ndarray:
 
     wgs84_coords = convert_radolan_to_wgs84(x_radolan_coords, y_radolan_coords)
     wgs84_coords = np.array(wgs84_coords).T
-    # wgs84_coords = np.flip(wgs84_coords, axis=1)
 
     wgs84_coords = np.flip(wgs84_coords, axis=0)
 
