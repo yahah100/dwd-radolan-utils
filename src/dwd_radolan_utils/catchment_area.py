@@ -2,12 +2,15 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from matplotlib import pyplot as plt
 from pyproj import CRS, Transformer
 from pysheds.sgrid import sGrid
 from pysheds.sview import Raster as sRaster
 
 from dwd_radolan_utils.geo_utils import get_wgs84_grid
 from dwd_radolan_utils.pysheds_helper.utils import convert_to_utm, load_dem, zoom_dem
+from dwd_radolan_utils.pysheds_helper.plot_helper import plot_distance_catchment_area
+from dwd_radolan_utils.extraction import compute_arg_min_max_dict
 
 
 def load_inflated_dem(data_dir=Path("data/dgm"), downsample_factor: int = 10) -> tuple[sRaster, sGrid]:
@@ -261,8 +264,6 @@ def convert_grid_to_radolan_grid_vectorized(dist: sRaster, grid: sGrid) -> np.nd
     Returns:
         np.ndarray: A grid of distance values in the radolan grid
     """
-    from pyproj import CRS, Transformer
-
     wgs_84_grid = get_wgs84_grid()
 
     new_grid = np.full((900, 900), np.nan)
@@ -378,12 +379,20 @@ def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.n
 
     new_grid_list = []
     for dist_single, grid_single in zip(dist, grid, strict=False):
-        new_grid = convert_grid_to_radolan_grid_vectorized(dist_single, grid_single)
+        new_grid = convert_grid_to_radolan_grid_loops(dist_single, grid_single)
         # normalize to 0-1
         new_grid = 1 - ((new_grid - np.nanmin(new_grid)) / (np.nanmax(new_grid) - np.nanmin(new_grid)))
         new_grid_list.append(new_grid)
 
     return np.stack(new_grid_list)
+
+
+def plot_grid_with_min_max(grid: np.ndarray, min_max_dict: dict[str, int]) -> None:
+    plt.imshow(
+        grid[min_max_dict["min_x"]:min_max_dict["max_x"], min_max_dict["min_y"]:min_max_dict["max_y"]]
+    )
+    plt.colorbar()
+    plt.savefig(".plot/dist_map_kluse_grid.png")
 
 
 def main():
@@ -392,7 +401,11 @@ def main():
     dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=1, data_dir=data_dir)
 
     new_grid = convert_grid_to_radolan_grid(dist, grid)
-    # new_grid = normalize_dist_map(new_grid)
+    plot_distance_catchment_area(grid[0], dist[0], kluse_dis_wgs84[0], kluse_dis_wgs84[1])
+
+    plot_grid = new_grid[0]
+    min_max_dict = compute_arg_min_max_dict(plot_grid)
+    plot_grid_with_min_max(plot_grid, min_max_dict)
 
     # save as np file
     np.save("dist_map_kluse.npy", new_grid)
