@@ -379,6 +379,8 @@ def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.n
     new_grid_list = []
     for dist_single, grid_single in zip(dist, grid, strict=False):
         new_grid = convert_grid_to_radolan_grid_vectorized(dist_single, grid_single)
+        # normalize to 0-1
+        new_grid = 1 - ((new_grid - np.nanmin(new_grid)) / (np.nanmax(new_grid) - np.nanmin(new_grid)))
         new_grid_list.append(new_grid)
 
     return np.stack(new_grid_list)
