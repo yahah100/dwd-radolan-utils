@@ -387,7 +387,7 @@ def convert_grid_to_radolan_grid(dist: list[sRaster], grid: list[sGrid]) -> np.n
 def main():
     kluse_dis_wgs84 = (7.158556, 51.255604)
     data_dir = Path("data/dgm")
-    dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=50, data_dir=data_dir)
+    dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=1, data_dir=data_dir)
 
     new_grid = convert_grid_to_radolan_grid(dist, grid)
     # new_grid = normalize_dist_map(new_grid)
