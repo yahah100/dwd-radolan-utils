@@ -95,10 +95,12 @@ def get_wgs84_grid() -> np.ndarray:
 
     wgs84_coords = convert_radolan_to_wgs84(x_radolan_coords, y_radolan_coords)
     wgs84_coords = np.array(wgs84_coords).T
-    wgs84_coords = np.flip(wgs84_coords, axis=1)
+    # wgs84_coords = np.flip(wgs84_coords, axis=1)
 
-    lat = np.repeat(wgs84_coords[:, 0], 900).reshape(900, 900)
-    lon = np.tile(wgs84_coords[:, 1], 900).T.reshape(900, 900)
+    wgs84_coords = np.flip(wgs84_coords, axis=0)
+
+    lat = np.repeat(wgs84_coords[:, 1], 900).reshape(900, 900)
+    lon = np.tile(wgs84_coords[:, 0][::-1], 900).T.reshape(900, 900)
 
     wgs84_grid = np.stack([lat, lon], axis=2)
     return wgs84_grid
