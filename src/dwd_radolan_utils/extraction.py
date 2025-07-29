@@ -365,7 +365,7 @@ def save_ts_array(
 
 
 def main():
-    path = Path("data/dwd")
+    path = Path("../data/processed_data")
     grid = np.load(Path("dist_map_kluse.npy"))
     ts_array, timestamps = extract_time_series_from_radar(grid, path)
     print(ts_array.shape)
