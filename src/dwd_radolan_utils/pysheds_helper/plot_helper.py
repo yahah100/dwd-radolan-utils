@@ -161,6 +161,7 @@ def plot_distance_catchment_area(grid: Grid, dist: Raster, x_snap: float, y_snap
         y_snap: Y coordinate of the pour point (outlet) in grid's coordinate system
         padding: Padding in meters to add around the data extent (default: 500)
     """
+    logging.info(f"Plotting distance catchment area --------------------------------")
     colors_list = [
         "#2E8B57",
         "#32CD32",
