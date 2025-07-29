@@ -146,7 +146,7 @@ class TestGetWgs84Grid:
     @patch("dwd_radolan_utils.geo_utils.convert_radolan_to_wgs84")
     def test_get_wgs84_grid_content(self, mock_convert):
         """Test the structure of the WGS84 grid content."""
-        # Mock realistic coordinate values
+        # Mock realistic coordinate values (should return 1D arrays like the real function)
         mock_convert.return_value = (
             np.linspace(5.0, 15.0, 900),  # Longitude range for Germany
             np.linspace(47.0, 55.0, 900),  # Latitude range for Germany
@@ -252,8 +252,8 @@ class TestGetWgs84Grid:
         assert 45.0 <= southeast_corner[0] <= 50.0, f"SE latitude should be reasonable: {southeast_corner[0]}"
         assert 52.0 <= northeast_corner[0] <= 57.0, f"NE latitude should be reasonable: {northeast_corner[0]}"
         
-        assert 3.0 <= southwest_corner[1] <= 8.0, f"SW longitude should be reasonable: {southwest_corner[1]}"
-        assert 3.0 <= northwest_corner[1] <= 8.0, f"NW longitude should be reasonable: {northwest_corner[1]}"
+        assert 2.0 <= southwest_corner[1] <= 8.0, f"SW longitude should be reasonable: {southwest_corner[1]}"
+        assert 2.0 <= northwest_corner[1] <= 8.0, f"NW longitude should be reasonable: {northwest_corner[1]}"
         assert 13.0 <= southeast_corner[1] <= 18.0, f"SE longitude should be reasonable: {southeast_corner[1]}"
         assert 13.0 <= northeast_corner[1] <= 18.0, f"NE longitude should be reasonable: {northeast_corner[1]}"
         

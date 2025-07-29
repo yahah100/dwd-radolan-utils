@@ -80,7 +80,6 @@ def convert_radolan_to_wgs84(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, 
 
     return transformer.transform(x, y)
 
-
 def get_wgs84_grid() -> np.ndarray:
     """
     Returns a grid of WGS84 coordinates. Each cell is a tuple of (latitude, longitude) of the radolan grid in WGS84.
@@ -93,17 +92,18 @@ def get_wgs84_grid() -> np.ndarray:
     x_radolan_coords = np.arange(-522.9621669218559, 376.0378330781441 + 0.1, 1.0)
     y_radolan_coords = np.arange(-4658.144724265571, -3759.1447242655713 + 0.1, 1.0)
 
-    wgs84_coords = convert_radolan_to_wgs84(x_radolan_coords, y_radolan_coords)
-    wgs84_coords = np.array(wgs84_coords).T
-
-    wgs84_coords = np.flip(wgs84_coords, axis=0)
-
-    lat = np.repeat(wgs84_coords[:, 1], 900).reshape(900, 900)
-    lon = np.tile(wgs84_coords[:, 0][::-1], 900).T.reshape(900, 900)
-
-    wgs84_grid = np.stack([lat, lon], axis=2)
+    lon_1d, lat_1d = convert_radolan_to_wgs84(x_radolan_coords, y_radolan_coords)
+    
+    coords_1d = np.column_stack([lon_1d, lat_1d])
+    coords_1d = np.flip(coords_1d, axis=0)
+    
+    # Create 2D grids from the 1D converted coordinates 
+    lat_grid = np.repeat(coords_1d[:, 1], 900).reshape(900, 900)
+    lon_grid = np.tile(coords_1d[:, 0][::-1], 900).T.reshape(900, 900)
+    
+    # Stack into final format [latitude, longitude]
+    wgs84_grid = np.stack([lat_grid, lon_grid], axis=2)
     return wgs84_grid
-
 
 def cut_out_shapes(x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int, max_dim_2: int) -> np.ndarray:
     """
@@ -117,7 +117,7 @@ def cut_out_shapes(x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int
         max_dim_2 (int): Maximum dimension 2.
 
     Returns:
-    np.ndarray: The array with shape: (n, max_dim_1-min_dim_1, max_dim_2-min_dim_2) containing the cut-out shapes.
+        np.ndarray: The array with shape: (n, max_dim_1-min_dim_1, max_dim_2-min_dim_2) containing the cut-out shapes.
     """
 
     if len(x.shape) == 3:
@@ -126,3 +126,4 @@ def cut_out_shapes(x: np.ndarray, min_dim_1: int, max_dim_1: int, min_dim_2: int
         return x[min_dim_1:max_dim_1, min_dim_2:max_dim_2]
     else:
         raise ValueError("Input array must have either 2 or 3 dimensions.")
+        
