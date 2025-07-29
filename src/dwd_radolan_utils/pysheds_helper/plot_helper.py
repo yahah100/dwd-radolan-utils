@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from pysheds.grid import Grid
+from pysheds.sgrid import sGrid as Grid
 from pysheds.sview import Raster
 
 from dwd_radolan_utils.pysheds_helper.utils import zoom_dem
