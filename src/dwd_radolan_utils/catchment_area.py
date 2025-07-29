@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-
+import copy
 import numpy as np
 from matplotlib import pyplot as plt
 from pyproj import CRS, Transformer
@@ -98,20 +98,22 @@ def compute_catchment_area(
     # Convert to scalar values to fix type issues
     x_snap = float(x_snap_raw) if hasattr(x_snap_raw, "item") else float(x_snap_raw)
     y_snap = float(y_snap_raw) if hasattr(y_snap_raw, "item") else float(y_snap_raw)
-    print(f"\nSnapped coordinates: x={x_snap}, y={y_snap}")
+    logging.info(f"Snapped coordinates: x={x_snap}, y={y_snap}")
 
     # Delineate the catchment
     catch = grid.catchment(x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate")
 
-    print(f"Catchment shape: {catch.shape}")
-    print(f"Catchment True values: {np.sum(catch)}")
+    logging.info(f"Catchment shape: {catch.shape} | True values: {np.sum(catch)}")
 
     # Create clipped view of the catchment
-    grid.clip_to(catch)
-    clipped_catch = grid.view(catch)
+    grid_copy = copy.deepcopy(grid)
+    grid_copy.clip_to(catch)
+    clipped_catch = grid_copy.view(catch)
 
-    dist = grid.distance_to_outlet(x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate")
+    logging.info(f"Computing distance to outlet")
+    dist = grid_copy.distance_to_outlet(x=x_snap, y=y_snap, fdir=fdir, dirmap=dirmap, xytype="coordinate")
     dist[dist == np.inf] = np.nan
+    logging.info(f"Distance to outlet shape: {dist.shape}")
     return clipped_catch, dist, (x_snap, y_snap)
 
 
@@ -145,9 +147,7 @@ def compute_catchement_for_location(coordinates: tuple[float, float], downsample
 
     acc, fdir = compute_accumulation(inflated_dem, grid, dirmap)
 
-    _, dist, _ = compute_catchment_area(fdir, acc, grid, dirmap, coordinates)
-
-    # plot_distance_catchment_area(grid, dist, x_snap, y_snap)
+    _, dist, (x_snap, y_snap) = compute_catchment_area(fdir, acc, grid, dirmap, coordinates)
 
     return dist, grid
 
@@ -401,12 +401,12 @@ def main():
     dist, grid = compute_multiple_catchments([kluse_dis_wgs84], downsample_factor=1, data_dir=data_dir)
 
     new_grid = convert_grid_to_radolan_grid(dist, grid)
-    plot_distance_catchment_area(grid[0], dist[0], kluse_dis_wgs84[0], kluse_dis_wgs84[1])
 
     plot_grid = new_grid[0]
     min_max_dict = compute_arg_min_max_dict(plot_grid)
     plot_grid_with_min_max(plot_grid, min_max_dict)
 
+    logging.info(f"Saving grid to {Path('dist_map_kluse.npy')}")
     # save as np file
     np.save("dist_map_kluse.npy", new_grid)
 
